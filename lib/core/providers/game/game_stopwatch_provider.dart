@@ -56,20 +56,20 @@ class GameStopwatchNotifier extends Notifier<GameStopwatchState> {
         ? game.copyWith(status: GameStatus.InProgress, startTime: DateTime.now())
         : game;
 
-    _timerService.startStopwatch(game.id, Duration(minutes: game.duration ?? 10));
+    _timerService.startStopwatch(game.id!, Duration(minutes: game.duration ?? 10));
 
     ref.read(gameSessionProvider.notifier).setGame(updatedGame);
     ref.read(gameScheduleProvider.notifier).moveToInProgress(updatedGame);
 
     state = state.copyWith(isGameRunning: true);
-    _setupTimeListener(game.id);
+    _setupTimeListener(game.id!);
   }
 
   //FUNÇÃO DE PAUSA DA PARTIDA
   void pauseGame() {
     final game = ref.read(gameSessionProvider).currentGame;
     if (game == null) return;
-    _timerService.pauseStopwatch(game.id);
+    _timerService.pauseStopwatch(game.id!);
     state = state.copyWith(isGameRunning: false);
   }
 
@@ -79,7 +79,7 @@ class GameStopwatchNotifier extends Notifier<GameStopwatchState> {
     final game = session.currentGame;
     if (game == null) return;
 
-    _timerService.stopStopwatch(game.id);
+    _timerService.stopStopwatch(game.id!);
     _cleanup();
 
     final finished = game.copyWith(status: GameStatus.Completed, endTime: DateTime.now());
@@ -96,7 +96,7 @@ class GameStopwatchNotifier extends Notifier<GameStopwatchState> {
     final game = session.currentGame;
     if (game == null) return;
 
-    _timerService.resetStopwatch(game.id);
+    _timerService.resetStopwatch(game.id!);
     _cleanup();
 
     final reset = game.copyWith(status: GameStatus.Scheduled);

@@ -12,23 +12,15 @@ class EventService {
   ApiClient apiClient = sl<ApiClient>();
 
   //FUNÇÃO DE BUSCA EVENTO ESPECIFICO
-  Future<EventModel> fetchEventById(int id) async{
-    final resp = await apiClient.get("${ApiRoutes.events}$id");
+  Future<EventModel> fetchEvent(String uuid) async{
+    final resp = await apiClient.get("${ApiRoutes.events}$uuid");
     return EventModel.fromJson(resp.data);
   }
   
   //FUNÇÃO DE BUSCA DE TODOS OS EVENTOS
-  Future<List<EventModel>> fetchEvents() async{
-    final resp = await apiClient.get(ApiRoutes.events);
-    final events = resp.data['events'] ?? [];
-    return events
-      .map<EventModel>((e) => EventModel.fromMap(e))
-      .toList();
-  }
-
-  //FUNÇÃO DE BUSCA DE DADOS DO USUARIO
-  Future<List<EventModel>> fetchUserEvents(int? userId) async{
-    final resp = await apiClient.get(ApiRoutes.userEvent);
+  Future<List<EventModel>> fetchEvents(bool user) async{
+    final route = user ? ApiRoutes.userEvent : ApiRoutes.events;
+    final resp = await apiClient.get(route);
     final events = resp.data['events'] ?? [];
     return events
       .map<EventModel>((e) => EventModel.fromMap(e))
@@ -36,8 +28,8 @@ class EventService {
   }
   
   //FUNÇÃO DE BUSCA DE DADOS DE RANKING
-  Future<List<UserModel>?> fetchRankEvent(int? id, String type) async{
-    final resp = await apiClient.get("${ApiRoutes.events}$id/rank/$type");
+  Future<List<UserModel>?> fetchRankEvent(String? uuid, String type) async{
+    final resp = await apiClient.get("${ApiRoutes.events}$uuid/rank/$type");
     final rank = resp.data['rank'] ?? [];
     return rank
       .map<UserModel>((e) => UserModel.fromMap(e))
@@ -45,8 +37,8 @@ class EventService {
   }
   
   //FUNÇÃO DE BUSCA DE DADOS DE REGRAS DA PELADA
-  Future<List<RuleModel>?> fetchRulesEvent(int? id,) async{
-    final resp = await apiClient.get("${ApiRoutes.events}$id/rules");
+  Future<List<RuleModel>?> fetchRulesEvent(String? uuid,) async{
+    final resp = await apiClient.get("${ApiRoutes.events}$uuid/rules");
     final rules = resp.data['rules'] ?? [];
     return rules
       .map<RuleModel>((e) => RuleModel.fromMap(e))
@@ -54,26 +46,26 @@ class EventService {
   }
   
   //FUNÇÃO DE BUSCA DE DADOS DE REGRAS DA PELADA
-  Future<List<NewsModel>?> fetchNewsEvent(int? id,) async{
-    final resp = await apiClient.get("${ApiRoutes.events}$id/news");
+  Future<List<NewsModel>?> fetchNewsEvent(String? uuid,) async{
+    final resp = await apiClient.get("${ApiRoutes.events}$uuid/news");
     final news = resp.data['news'] ?? [];
     return news
       .map<NewsModel>((e) => NewsModel.fromMap(e))
       .toList();
   }
 
-  //FUNÇÃO DE BUSCA DE PARTIDAS DA PELADA
-  Future<List<GameModel>?> fetchGamesEvent(int? id,) async{
-    final resp = await apiClient.get("${ApiRoutes.events}$id/games");
-    final news = resp.data['news'] ?? [];
-    return news
+  //FUNÇÃO DE BUSCA DE PARTuuIDAS DA PELADA
+  Future<List<GameModel>?> fetchGamesEvent(String? uuid,) async{
+    final resp = await apiClient.get("${ApiRoutes.events}/$uuid/games");
+    final games = resp.data['games'] ?? [];
+    return games
       .map<GameModel>((e) => GameModel.fromMap(e))
       .toList();
   }
   
-  //FUNÇÃO DE BUSCA DE PARTIDAS DA PELADA
-  Future<List<GameModel>?> fetchHistoricEvent(int? id,) async{
-    final resp = await apiClient.get("${ApiRoutes.events}$id/historic");
+  //FUNÇÃO DE BUSCA DE PARTuuIDAS DA PELADA
+  Future<List<GameModel>?> fetchHistoricEvent(String? uuid,) async{
+    final resp = await apiClient.get("${ApiRoutes.events}$uuid/historic");
     final news = resp.data['news'] ?? [];
     return news
       .map<GameModel>((e) => GameModel.fromMap(e))

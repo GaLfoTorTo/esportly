@@ -7,11 +7,12 @@ import 'package:esportly/data/models/result_model.dart';
 import 'package:esportly/data/models/team_model.dart';
 
 class GameModel {
-  final int id;
+  final int? id;
   final int? number;
   final int? eventId;
   int? refereeId;
   final int? duration;
+  DateTime? date;
   DateTime? startTime;
   DateTime? endTime;
   GameStatus? status;
@@ -22,11 +23,12 @@ class GameModel {
   final DateTime? deletedAt;
 
   GameModel({
-    required this.id,
+    this.id,
     this.number,
     this.eventId,
     this.refereeId,
     this.duration,
+    this.date,
     this.startTime,
     this.endTime,
     this.status,
@@ -43,6 +45,7 @@ class GameModel {
     int? eventId,
     int? refereeId,
     int? duration,
+    DateTime? date,
     DateTime? startTime,
     DateTime? endTime,
     GameStatus? status,
@@ -58,6 +61,7 @@ class GameModel {
       eventId: eventId ?? this.eventId,
       refereeId: refereeId ?? this.refereeId,
       duration: duration ?? this.duration,
+      date: date ?? this.date,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       status: status ?? this.status,
@@ -76,6 +80,7 @@ class GameModel {
       'eventId': eventId,
       'refereeId': refereeId,
       'duration': duration,
+      'date': date?.toIso8601String(),
       'startTime': startTime,
       'endTime': endTime,
       'status': status,
@@ -88,16 +93,18 @@ class GameModel {
   }
 
   factory GameModel.fromMap(Map<String, dynamic> map) {
+    final DateTime? date = DateHelper.parseDate(map['date']);
     return GameModel(
-      id: map['id'] as int,
+      id: map['id'] != null ? map['id'] as int : null,
       number: map['number'] as int,
       eventId: map['eventId'] as int,
       refereeId: map['refereeId'] != null ? map['refereeId'] as int : null,
       duration: map['duration'] != null ? map['duration'] as int : null,
-      startTime: map['startTime'] != null ? map['startTime'] as DateTime : null,
-      endTime: map['endTime'] != null ? map['endTime'] as DateTime : null,
+      date: date,
+      startTime: DateHelper.parseTime(map['startTime'], baseDate: date),
+      endTime: DateHelper.parseTime(map['endTime'], baseDate: date),
       status: map['status'] != null
-        ? GameStatus.values.firstWhere((e) => e == map['status'])
+        ? GameStatus.values.where((e) => e.name == map['status']).firstOrNull
         : null,
       result: map['result'] != null 
         ? ResultModel.fromMap(map['result'] as Map<String,dynamic>) 
@@ -121,19 +128,20 @@ class GameModel {
 
   @override
   String toString() {
-    return 'GameModel(id: $id, number: $number, eventId: $eventId, refereeId: $refereeId, duration: $duration, startTime: $startTime, endTime: $endTime, status: $status, result: $result, teams: $teams, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt)';
+    return 'GameModel(id: $id, number: $number, eventId: $eventId, refereeId: $refereeId, duration: $duration, date: $date, startTime: $startTime, endTime: $endTime, status: $status, result: $result, teams: $teams, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt)';
   }
 
   @override
   bool operator ==(covariant GameModel other) {
     if (identical(this, other)) return true;
   
-    return 
+    return
       other.id == id &&
       other.number == number &&
       other.eventId == eventId &&
       other.refereeId == refereeId &&
       other.duration == duration &&
+      other.date == date &&
       other.startTime == startTime &&
       other.endTime == endTime &&
       other.status == status &&
@@ -151,6 +159,7 @@ class GameModel {
       eventId.hashCode ^
       refereeId.hashCode ^
       duration.hashCode ^
+      date.hashCode ^
       startTime.hashCode ^
       endTime.hashCode ^
       status.hashCode ^

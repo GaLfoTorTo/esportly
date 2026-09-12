@@ -70,7 +70,6 @@ class GameScheduleNotifier extends Notifier<GameScheduleState> {
   void init(EventModel event) async{
     state = state.copyWith(
       event: event,
-      loading: true,
       date: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
     );
     //BUSCAR / GERAR PARTIDAS DO EVENTO
@@ -87,14 +86,15 @@ class GameScheduleNotifier extends Notifier<GameScheduleState> {
 
   //FUNÇÃO DE DEFINIÇÃO DE PARITDA DO EVENTO
   Future<void> getGames() async {
+    state = state.copyWith(loading: true);
     try {
       await Future.delayed(const Duration(seconds: 3));
-      final List<GameModel>? games = await _eventRepository.getGamesEvent(state.event!.id!);
+      final List<GameModel>? games = await _eventRepository.getGamesEvent(state.event!.uuid!);
       if (games != null) {
         if (isToday()) {
-          state = state.copyWith(nextGames: games, hasGames: true, loading: true);
+          state = state.copyWith(nextGames: games, hasGames: true, loading: false);
         } else {
-          state = state.copyWith(scheduledGames: games, hasGames: true, loading: true);
+          state = state.copyWith(scheduledGames: games, hasGames: true, loading: false);
         }
       } else {
         state = state.copyWith(hasGames: false, loading: false);
@@ -108,7 +108,7 @@ class GameScheduleNotifier extends Notifier<GameScheduleState> {
   Future<bool> getHistoricGames(EventModel event) async {
     state = state.copyWith(loading: false);
     try {
-      final games = await _eventRepository.geHistoricEvent(state.event!.id!);
+      final games = await _eventRepository.geHistoricEvent(state.event!.uuid!);
       final Map<String, List<GameModel>> mapGames = {};
       if(games != null){
         for (final item in games) {

@@ -150,7 +150,7 @@ class GameSessionNotifier extends Notifier<GameSessionState> {
       endTime: (state.currentGame!.startTime ?? DateTime.now())
           .add(Duration(minutes: totalDuration)),
       result: ResultModel(
-        gameId: state.currentGame!.id,
+        gameId: state.currentGame!.id!,
         teamA: newTeamA,
         teamB: newTeamB,
         teamAScore: ref.read(gameMatchProvider).teamAScore,

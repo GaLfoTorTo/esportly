@@ -50,7 +50,7 @@ class EventRulesNotifier extends Notifier<EventRulesState> {
 
   //FUNÇÃO DE DEFINIÇÃO DE RANKING
   Future<void> getRules(String type) async{
-    final rules = await _eventRepository.getRulesEvent(state.event!.id!);
+    final rules = await _eventRepository.getRulesEvent(state.event!.uuid!);
     state = state.copyWith(rules: rules);
   }
 }

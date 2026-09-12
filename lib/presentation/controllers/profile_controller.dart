@@ -51,6 +51,6 @@ class ProfileController extends ChangeNotifier {
   //FUNÇÃO DE BUSCA DE EVENTOS DO USUARIO
   Future<void> getUserEvents() async {
     //BUSCAR EVENTOS DO USUARIO
-    events.addAll(await eventRepository.getUserEvents(user.id));
+    //events.addAll(await eventRepository.getUserEvents(user.id));
   }
 }

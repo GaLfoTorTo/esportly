@@ -23,14 +23,12 @@ class EventGamesPage extends ConsumerStatefulWidget {
 class _EventGamesPageState extends ConsumerState<EventGamesPage> {
   late PageController inProgressController;
   late EventModel event;
-  late String date;
 
   @override
   void initState() {
     super.initState();
     event = ref.read(eventSessionProvider).event!;
     inProgressController = PageController();
-    date = DateHelper.getDateLabel(ref.read(gameScheduleProvider).date!);
   }
 
   @override
@@ -38,6 +36,7 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
     var dimensions = MediaQuery.of(context).size;
     final gameSession = ref.watch(gameScheduleProvider);
     final isToday = ref.read(gameScheduleProvider.notifier).isToday();
+    String date = DateHelper.getDateLabel(ref.read(gameScheduleProvider).date!);
 
     //ESTADO - ITEMS EVENTO
     final modalityMap = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality!.name);
@@ -63,15 +62,16 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
             Builder(builder: (_) {
               List<Widget> listGames = [];
 
-              if (!gameSession.loading) {
+              if (gameSession.loading) {
                 return const SkeletonGamesWidget();
               }
 
               if (!gameSession.hasGames) {
-                return ErroGamePage();
+                return const ErroGamePage();
               }
 
               if (gameSession.date != null && isToday) {
+                //PARTIDAS EM ANDAMENTO
                 if (gameSession.inProgressGames.isNotEmpty) {
                   listGames.addAll([
                     Padding(
@@ -123,7 +123,7 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
                     ],
                   ]);
                 }
-
+                //PARTIDAS AGENDADAS (HOJE)
                 if (gameSession.nextGames.isNotEmpty) {
                   listGames.addAll([
                     Padding(
@@ -134,7 +134,7 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
                         children: [
                           Text(
                             'Próximas partidas  - $date',
-                            style: Theme.of(context).textTheme.titleSmall,
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ],
                       ),
@@ -165,10 +165,9 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
                   ]);
                 }
               }
-
-              if (gameSession.scheduledGames.isNotEmpty && gameSession.scheduledGames.length < 4) {
-                if (gameSession.scheduledGames.isEmpty) return const SizedBox.shrink();
-                date = DateHelper.getDateLabel(gameSession.scheduledGames.first!.startTime!);
+              //PARTIDAS AGENDADAS (PROXIMO DIA)
+              if (gameSession.scheduledGames.isNotEmpty) {
+                date = DateHelper.getDateLabel(gameSession.scheduledGames.first!.date!);
                 listGames.addAll([
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -178,7 +177,7 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
                       children: [
                         Text(
                           'Partidas Agendadas - $date',
-                          style: Theme.of(context).textTheme.titleSmall,
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ],
                     ),

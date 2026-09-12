@@ -26,14 +26,14 @@ Future<void> registerSession(UserModel user) async {
 //FUNÇÃO DE BUSCA DE EVENTOS DO USUARIO
 Future<void> registerEvents(UserModel user) async{
   //BUSCAR EVENTOS DO USUARIO
-  List<EventModel> events = await sl<EventRepository>().getUserEvents(user.id);
-  if(events.isNotEmpty){
+  List<EventModel>? events = await sl<EventRepository>().getEvents(user: true);
+  if(events != null && events.isNotEmpty){
     //SUBSCRIÇÃO DE NOTIFICAÇÕES DO EVENTO
     FirebaseService().subscribe(events);
   }
   //ADICIONAR GLOBALMENT AO GET EVENTOS DO USUARIO
   if (!sl.isRegistered<List<EventModel>>(instanceName: 'events')) {
-    sl.registerSingleton<List<EventModel>>(events, instanceName: 'events');
+    sl.registerSingleton<List<EventModel>>(events ?? [], instanceName: 'events');
   }
 }
 

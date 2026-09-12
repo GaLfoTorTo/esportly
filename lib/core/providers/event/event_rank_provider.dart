@@ -52,7 +52,7 @@ class EventRankNotifier extends Notifier<EventRankState> {
 
   //FUNÇÃO DE DEFINIÇÃO DE RANKING
   Future<void> setRanking(String type) async{
-    final participants = await _eventRepository.getRankEvent(state.event!.id!, state.type);
+    final participants = await _eventRepository.getRankEvent(state.event!.uuid!, state.type);
     state = state.copyWith(participants: participants);
   }
 }

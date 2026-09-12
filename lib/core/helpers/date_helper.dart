@@ -40,4 +40,37 @@ class DateHelper {
     if (value is String) return DateTime.parse(value);
     return null;
   }
+
+  // Converte string de horário "HH:mm:ss" ou "HH:mm" para DateTime.
+  // Se baseDate for fornecido, combina a data dele com o horário parsed.
+  static DateTime? parseTime(dynamic value, {DateTime? baseDate}) {
+    if (value == null) return null;
+    if (value is DateTime) return _applyBaseDate(value, baseDate);
+    if (value is String) {
+      DateTime? time;
+      try {
+        time = DateTime.parse(value);
+      } catch (_) {}
+      if (time == null) {
+        try {
+          time = DateFormat('HH:mm:ss').parse(value);
+        } catch (_) {}
+      }
+      if (time == null) {
+        try {
+          time = DateFormat('HH:mm').parse(value);
+        } catch (_) {}
+      }
+      if (time != null) return _applyBaseDate(time, baseDate);
+    }
+    return null;
+  }
+
+  static DateTime _applyBaseDate(DateTime time, DateTime? baseDate) {
+    if (baseDate == null) return time;
+    return DateTime(
+      baseDate.year, baseDate.month, baseDate.day,
+      time.hour, time.minute, time.second, time.millisecond,
+    );
+  }
 }

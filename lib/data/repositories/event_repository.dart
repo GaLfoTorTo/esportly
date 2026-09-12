@@ -9,31 +9,14 @@ class EventRepository {
   final EventService remoteService = EventService();
   final List<EventModel> _cache = <EventModel>[];
 
-  //BUSCAR EVENTOS
-  @override
-  Future<List<EventModel>?> getEvents() async {
-    if (_cache.isNotEmpty) return _cache;
-    try {
-      final events = await remoteService.fetchEvents();
-      _cache..clear()..addAll(events);
-      return events;
-    } catch (e, stackTrace) {
-      print('=== ERRO COMPLETO ===');
-      print('Erro: $e');
-      print('Stack trace: $stackTrace');
-      print('=====================');
-      return [];
-    }
-  }
-
   //BUSCAR EVENTOS POR ID
   @override
-  Future<EventModel?> getEventById(int id) async {
+  Future<EventModel?> getEvent(String uuid) async {
     if (_cache.isNotEmpty) {
-      return _cache.firstWhere((u) => u.id == id);
+      return _cache.firstWhere((u) => u.uuid == uuid);
     }
     try {
-      final event = await remoteService.fetchEventById(id);
+      final event = await remoteService.fetchEvent(uuid);
       _cache..clear()..add(event);
       return event;
     } catch (e, stackTrace) {
@@ -45,12 +28,12 @@ class EventRepository {
     }
   }
 
-  //BUSCAR EVENTOS DO USUARIO
+  //BUSCAR EVENTOS
   @override
-  Future<List<EventModel>> getUserEvents(int? userId) async {
+  Future<List<EventModel>?> getEvents({bool? user}) async {
     if (_cache.isNotEmpty) return _cache;
     try {
-      final events = await remoteService.fetchUserEvents(userId);
+      final events = await remoteService.fetchEvents(user ?? false);
       _cache..clear()..addAll(events);
       return events;
     } catch (e, stackTrace) {
@@ -62,11 +45,12 @@ class EventRepository {
     }
   }
 
+
   //BUSCAR RANKING APARTIR DO TIPO
   @override
-  Future<List<UserModel>?> getRankEvent(int id, String type) async {
+  Future<List<UserModel>?> getRankEvent(String uuid, String type) async {
     try {
-      final participants = await remoteService.fetchRankEvent(id, type);
+      final participants = await remoteService.fetchRankEvent(uuid, type);
       return participants;
     } catch (e, stackTrace) {
       print('=== ERRO COMPLETO ===');
@@ -79,9 +63,9 @@ class EventRepository {
   
   //BUSCAR REGRAS DO EVENTO
   @override
-  Future<List<RuleModel>?> getRulesEvent(int id) async {
+  Future<List<RuleModel>?> getRulesEvent(String uuid) async {
     try {
-      final rules = await remoteService.fetchRulesEvent(id);
+      final rules = await remoteService.fetchRulesEvent(uuid);
       return rules;
     } catch (e, stackTrace) {
       print('=== ERRO COMPLETO ===');
@@ -94,9 +78,9 @@ class EventRepository {
 
   //BUSCAR PARTIDAS DO EVENTO
   @override
-  Future<List<GameModel>?> getGamesEvent(int id) async {
+  Future<List<GameModel>?> getGamesEvent(String uuid) async {
     try {
-      final games = await remoteService.fetchGamesEvent(id);
+      final games = await remoteService.fetchGamesEvent(uuid);
       return games;
     } catch (e, stackTrace) {
       print('=== ERRO COMPLETO ===');
@@ -109,9 +93,9 @@ class EventRepository {
   
   //BUSCAR HISTÓRICO DE PARTIDAS DO EVENTO
   @override
-  Future<List<GameModel>?> geHistoricEvent(int id) async {
+  Future<List<GameModel>?> geHistoricEvent(String uuid) async {
     try {
-      final games = await remoteService.fetchHistoricEvent(id);
+      final games = await remoteService.fetchHistoricEvent(uuid);
       return games;
     } catch (e, stackTrace) {
       print('=== ERRO COMPLETO ===');
