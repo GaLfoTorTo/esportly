@@ -13,8 +13,8 @@ class EventService {
 
   //FUNÇÃO DE BUSCA EVENTO ESPECIFICO
   Future<EventModel> fetchEvent(String uuid) async{
-    final resp = await apiClient.get("${ApiRoutes.events}$uuid");
-    return EventModel.fromJson(resp.data);
+    final resp = await apiClient.get("${ApiRoutes.events}/$uuid");
+    return EventModel.fromMap(resp.data['event']);
   }
   
   //FUNÇÃO DE BUSCA DE TODOS OS EVENTOS

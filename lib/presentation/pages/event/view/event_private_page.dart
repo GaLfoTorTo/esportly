@@ -16,7 +16,9 @@ class EventPrivatePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     var dimensions = MediaQuery.of(context).size;
-    final EventModel event = ref.watch(eventSessionProvider.select((s) => s.event!));
+    //BUSCAR EVENTO
+    final eventSession = ref.read(eventSessionProvider);
+    EventModel event = eventSession.event!;
     final UserModel eventOrganizador = event.participants![0];
 
     return Expanded(

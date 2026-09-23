@@ -209,7 +209,7 @@ class CardDayEventWidget extends ConsumerWidget {
                 ButtonTextWidget(
                   action: () {
                     ref.read(eventSessionProvider.notifier).setEvent(event);
-                    context.go('/games/day');
+                    context.go('/event/day');
                   },
                   width: 80,
                   height: 30,

@@ -1,24 +1,23 @@
-import 'package:esportly/core/helpers/date_helper.dart';
-import 'package:esportly/core/helpers/event_helper.dart';
-import 'package:esportly/presentation/widget/indicators/indicator_loading_widget.dart';
+import 'package:esportly/presentation/widget/skeletons/skeleton_event_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:esportly/core/di/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:esportly/core/api/api_routes.dart';
 import 'package:esportly/core/helpers/img_helper.dart';
 import 'package:esportly/core/helpers/map_helper.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:esportly/core/helpers/date_helper.dart';
+import 'package:esportly/core/helpers/event_helper.dart';
 import 'package:esportly/core/theme/app_colors.dart';
 import 'package:esportly/core/theme/app_icones.dart';
 import 'package:esportly/core/helpers/modality_helper.dart';
 import 'package:esportly/data/models/user_model.dart';
 import 'package:esportly/data/models/event_model.dart';
-import 'package:esportly/data/services/escalation_service.dart';
 import 'package:esportly/data/services/integration_map_service.dart';
 import 'package:esportly/core/providers/event/event_overview_provider.dart';
+import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/widget/buttons/button_icon_widget.dart';
 import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_map_travel.dart';
 import 'package:esportly/presentation/widget/text/expandable_text_widget.dart';
@@ -55,7 +54,7 @@ class _EventHomePageState extends ConsumerState<EventOverviewPage> {
     final travelDistance = ref.watch(eventOverviewProvider.select((s) => s.travelDistance));
     final travelTime = ref.watch(eventOverviewProvider.select((s) => s.travelTime));
     final String date = DateHelper.getEventDate(event.date!);
-    final Color modalityColor = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality!.name)['color'];
+    final Color modalityColor = ref.watch(eventSessionProvider.select((s) => s.modalityColor));
     //LISTA DE INFORMAÇÕES SOBRE AS PARTIDAS
     List<Map<String, dynamic>> infoGame = EventHelper.getInfoGameConfig(event);
     
@@ -67,10 +66,7 @@ class _EventHomePageState extends ConsumerState<EventOverviewPage> {
           : AppColors.white,
         width: dimensions.width,
         child: Builder(builder: (_) {
-          if (eventSession.loading) {
-            return const Center(child: IndicatorLoadingWidget());
-          }
-        
+          
           return Column(
             children: [
               Padding(

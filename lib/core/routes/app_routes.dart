@@ -23,7 +23,7 @@ import 'package:esportly/presentation/pages/escalation/historic_page.dart';
 import 'package:esportly/presentation/pages/escalation/market_page.dart';
 import 'package:esportly/presentation/pages/escalation/statistics_page.dart';
 import 'package:esportly/presentation/pages/games/detail/game_detail_page.dart';
-import 'package:esportly/presentation/pages/games/detail/games_day_page%20.dart';
+import 'package:esportly/presentation/pages/event/view/event_day_page%20.dart';
 import 'package:esportly/presentation/pages/games/config/game_config_page.dart';
 import 'package:esportly/presentation/pages/games/config/game_random_teams_page.dart';
 import 'package:esportly/presentation/pages/event/event_landing_page.dart';
@@ -126,6 +126,10 @@ class AppRoutes {
               path: '/event',
               pageBuilder: (_, __) => const NoTransitionPage(child: EventLandingPage()),
               routes: [
+                GoRoute(
+                  path: '/day',
+                  pageBuilder: (_, __) => const NoTransitionPage(child: EventDayPage()),
+                ),
                 GoRoute(
                   path: 'view',
                   pageBuilder: (_, __) => transitionToLeft(const EventPage()),
@@ -239,12 +243,8 @@ class AppRoutes {
       ),
       GoRoute(
         path: '/games',
-        redirect: (_, __) => '/games/day',
+        redirect: (_, __) => '/games/overview',
         routes: [
-          GoRoute(
-            path: '/day',
-            pageBuilder: (_, __) => const NoTransitionPage(child: GamesDayPage()),
-          ),
           GoRoute(
             path: '/config',
             pageBuilder: (_, __) => const NoTransitionPage(child: GameConfigPage()),

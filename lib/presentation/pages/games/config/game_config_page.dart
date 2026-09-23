@@ -353,7 +353,7 @@ class _GameConfigPageState extends ConsumerState<GameConfigPage> {
                           startTimeMinutes: 0,
                           refereer: refereer,
                         );
-                        context.go('/games/overview');
+                        context.pop();
                       },
                     ),
                   ],

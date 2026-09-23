@@ -56,8 +56,8 @@ class GameSessionNotifier extends Notifier<GameSessionState> {
 
   //FUNÇÃO INICIALIZAÇÃO
   void init(EventModel event) {
-    //ENCERRAR PROVIDER NA MEMORIA
-    dispose();
+    /* //ENCERRAR PROVIDER NA MEMORIA
+    dispose(); */
     try {
       state = state.copyWith(loading: true);
       state = state.copyWith(
@@ -65,7 +65,9 @@ class GameSessionNotifier extends Notifier<GameSessionState> {
         config: event.gameConfig,
       );
       ref.read(gameScheduleProvider.notifier).init(event);
+      ref.read(gameStreamProvider.notifier).init(event);
     } catch (e) {
+
       state = state.copyWith(error: true);
       final ctx = sl<GoRouter>().routerDelegate.navigatorKey.currentContext;
       if (ctx != null) AppHelper.feedbackMessage(ctx, AppHelper.extractErrorMessage(e));

@@ -38,7 +38,7 @@ class EventNewsPage extends ConsumerWidget {
               style: Theme.of(context).textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),
-            if(news != null)...[
+            if(news != null && news.isNotEmpty)...[
               Column(
                 spacing: 10,
                 children: news.map((eventNew){
@@ -161,25 +161,14 @@ class EventNewsPage extends ConsumerWidget {
                 }).toList(),
               )
             ]else...[
-              Column(
-                spacing: 50,
-                children: [
-                  Text(
-                    "A pelada ainda não registrou nehuma notícia",
-                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      color: AppColors.grey_500
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 100),
-                    child: Icon(
-                      Icons.history_rounded,
-                      size: 150, 
-                      color: AppColors.grey_300.withAlpha(50), 
-                    ),
-                  ),
-                ],
-              )
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 100),
+                child: Icon(
+                  Icons.history_rounded,
+                  size: 150, 
+                  color: AppColors.grey_300.withAlpha(50), 
+                ),
+              ),
             ]
           ]
         ),

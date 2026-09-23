@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:esportly/core/di/service_locator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:esportly/core/helpers/img_helper.dart';
-import 'package:esportly/core/helpers/app_helper.dart';
 import 'package:esportly/core/theme/app_colors.dart';
 import 'package:esportly/core/theme/app_icones.dart';
-import 'package:esportly/core/helpers/modality_helper.dart';
 import 'package:esportly/data/models/event_model.dart';
 import 'package:esportly/data/models/user_model.dart';
 import 'package:esportly/data/services/avaliation_service.dart';
@@ -25,6 +23,7 @@ import 'package:esportly/presentation/widget/buttons/button_icon_widget.dart';
 import 'package:esportly/presentation/widget/bars/header_widget.dart';
 import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_event_games.dart';
 import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_rule.dart';
+import 'package:esportly/presentation/widget/skeletons/skeleton_event_widget.dart';
 
 class EventPage extends ConsumerStatefulWidget {
   const EventPage({super.key});
@@ -39,43 +38,28 @@ class _EventPageState extends ConsumerState<EventPage> with SingleTickerProvider
   //CONTROLLER - TABS
   late final TabController tabController = TabController(length: 6, vsync: this);
   int tabIndex = 0;
-  //ESTADO - IMAGENS DA PELADA
-  bool brightness = false;
-  Color textColor = AppColors.white;
 
   //FUNÇÃO DE DEFINIÇÃO DE HEADER
-  PreferredSizeWidget setHeaderBar(index, privacy, bgColor, textColor){
-    if(index == 0){
+  PreferredSizeWidget setHeaderBar(EventSessionState session){
+    if(tabController.index == 0){
       return HeaderGlassWidget(
         title: "Pelada",
         leftAction: () => context.pop(),
-        rightIcon: privacy == 'Public' 
-          ? AppIcones.cog_solid 
-          : null,
-        rightAction: () => privacy == 'Public' 
-          ? context.push('/event/view/settings') 
-          : null,
-        brightness: brightness,
-      ); 
+        rightIcon: session.privacy == 'Public' ? AppIcones.cog_solid : null,
+        rightAction: () => session.privacy == 'Public' ? context.push('/event/view/settings') : null,
+        brightness: session.heroBrightness,
+      );
     }
 
     return HeaderWidget(
       title: "Pelada",
-      backgroundColor: bgColor,
-      textColor: textColor,
+      backgroundColor: session.modalityColor,
+      textColor: session.modalityTextColor,
       leftAction: () => context.pop(),
-      rightIcon: privacy == 'Public' 
-        ? AppIcones.cog_solid 
-        : null,
-      rightAction: () => privacy == 'Public' 
-        ? context.push('/event/view/settings') 
-        : null,
-      extraIcon: tabController.index == 1 
-        ? Icons.history 
-        : null,
-      extraAction: () => tabController.index == 1 
-        ? context.push('/event/view/historic') 
-        : null,
+      rightIcon: session.privacy == 'Public' ? AppIcones.cog_solid : null,
+      rightAction: () => session.privacy == 'Public' ? context.push('/event/view/settings') : null,
+      extraIcon: tabController.index == 1 ? Icons.history : null,
+      extraAction: () => tabController.index == 1 ? context.push('/event/view/historic') : null,
       shadow: false,
     );
   }
@@ -84,21 +68,10 @@ class _EventPageState extends ConsumerState<EventPage> with SingleTickerProvider
   Widget build(BuildContext context) {
     //RESGATAR DIMENSÕES DO DISPOSITIVO
     var dimensions = MediaQuery.of(context).size;
-    final eventSession = ref.read(eventSessionProvider);
-    //BUSCAR EVENTO
-    EventModel event = eventSession.event!;
-    double avaliations = AvaliationService().getRatingAvaliation(event.avaliations);
-    final modalityMap = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality!.name);
-    Color modalityColor = modalityMap['color'];
-    Color modalityTextColor = modalityMap['textColor'];
-    ImageProvider modalityImage = ImgHelper.getEventImg(event);
-    //ANALISE BRILHO DA IMAGEM DO EVENTO
-    AppHelper.isImageDark(modalityImage).then((isDark) {
-      setState(() {
-        brightness = isDark;
-        textColor = isDark ? AppColors.blue_500 : AppColors.white;
-      });
-    });
+    final eventSession = ref.watch(eventSessionProvider);
+    final inProgressNotEmpty = ref.watch(gameScheduleProvider.select((s) => s.inProgressGames.isNotEmpty));
+    final hasGames = ref.watch(gameScheduleProvider.select((s) => s.hasGames));
+
     //LISTA DE TABS
     List<String> tabs = [
       'Visão Geral',
@@ -109,19 +82,24 @@ class _EventPageState extends ConsumerState<EventPage> with SingleTickerProvider
       'Notícias'
     ];
 
-    final inProgressNotEmpty = ref.watch(gameScheduleProvider.select((s) => s.inProgressGames.isNotEmpty));
-    final hasGames = ref.watch(gameScheduleProvider.select((s) => s.hasGames));
-
     return Scaffold(
-      appBar: setHeaderBar(
-        tabController.index,
-        eventSession.privacy,
-        modalityColor,
-        modalityTextColor
-      ),
+      appBar: setHeaderBar(eventSession),
       extendBodyBehindAppBar: tabController.index == 0,
-      body:
-        Column(
+      body: Builder(builder: (_) {
+        if (eventSession.loading) {
+          return SizedBox(
+            width: dimensions.width,
+            height: dimensions.height,
+            child: const SkeletonEventWidget()
+          );
+        }
+
+        //BUSCAR EVENTO
+        EventModel event = eventSession.event!;
+        double avaliations = AvaliationService().getRatingAvaliation(event.avaliations);
+        final currentModalityImage = eventSession.modalityImage ?? ImgHelper.getEventImg(event);
+
+        return Column(
           children:[ 
             if(tabController.index == 0)...[
               Container(
@@ -129,7 +107,7 @@ class _EventPageState extends ConsumerState<EventPage> with SingleTickerProvider
                 height: dimensions.height * 0.4,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: modalityImage,
+                    image: currentModalityImage,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -167,7 +145,7 @@ class _EventPageState extends ConsumerState<EventPage> with SingleTickerProvider
                                 child: Text(
                                   avaliations.toStringAsFixed(1),
                                   style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                                    color: textColor
+                                    color: eventSession.heroTextColor
                                   ),
                                 ),
                               )
@@ -176,7 +154,7 @@ class _EventPageState extends ConsumerState<EventPage> with SingleTickerProvider
                           Text(
                             "${event.title}",
                             style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-                              color: textColor
+                              color: eventSession.heroTextColor
                             ),
                           ),
                           Row(
@@ -184,21 +162,21 @@ class _EventPageState extends ConsumerState<EventPage> with SingleTickerProvider
                               ButtonIconWidget(
                                 icon: Icons.bookmark,
                                 iconSize: 20,
-                                iconColor: brightness ? AppColors.dark_500 : AppColors.white,
+                                iconColor: eventSession.heroBrightness ? AppColors.dark_500 : AppColors.white,
                                 backgroundColor: AppColors.white.withAlpha(15),
                                 action: () {},
                               ),
                               ButtonIconWidget(
                                 icon: Icons.star,
                                 iconSize: 20,
-                                iconColor: brightness ? AppColors.dark_500 : AppColors.white,
+                                iconColor: eventSession.heroBrightness ? AppColors.dark_500 : AppColors.white,
                                 backgroundColor: AppColors.white.withAlpha(15),
                                 action: () {},
                               ),
                               ButtonIconWidget(
                                 icon: Icons.share,
                                 iconSize: 20,
-                                iconColor: brightness ? AppColors.dark_500 : AppColors.white,
+                                iconColor: eventSession.heroBrightness ? AppColors.dark_500 : AppColors.white,
                                 backgroundColor: AppColors.white.withAlpha(15),
                                 action: () {},
                               ),
@@ -222,11 +200,11 @@ class _EventPageState extends ConsumerState<EventPage> with SingleTickerProvider
                   indicator: UnderlineTabIndicator(
                     borderSide: BorderSide(
                       width: 5,
-                      color: modalityColor,
+                      color: eventSession.modalityColor,
                     ),
                     insets: EdgeInsets.symmetric(horizontal: dimensions.width / 4)
                   ),
-                  labelColor: modalityColor,
+                  labelColor: eventSession.modalityColor,
                   labelStyle: const TextStyle(
                     color: AppColors.grey_500,
                     fontWeight: FontWeight.normal,
@@ -288,16 +266,17 @@ class _EventPageState extends ConsumerState<EventPage> with SingleTickerProvider
               const EventPrivatePage()
             ]
           ]
-      ),
+      );
+      }),
       floatingActionButton: Builder(builder: (_) {
         if (hasGames && tabIndex == 1 && ref.read(gameScheduleProvider.notifier).isToday()) {
           return FloatButtonWidget(
             floatKey: "game_event",
             icon: Icons.play_arrow_rounded,
-            backgroundColor: modalityColor,
-            color: modalityTextColor,
+            backgroundColor: eventSession.modalityColor,
+            color: eventSession.modalityTextColor,
             onPressed: () => showModalBottomSheet(
-              context: context, 
+              context: context,
               backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
               builder: (_) => const BottomSheetEventGames()
             )
@@ -307,8 +286,8 @@ class _EventPageState extends ConsumerState<EventPage> with SingleTickerProvider
           return FloatButtonWidget(
             floatKey: "rules_event",
             icon: Icons.add_rounded,
-            backgroundColor: modalityColor,
-            color: modalityTextColor,
+            backgroundColor: eventSession.modalityColor,
+            color: eventSession.modalityTextColor,
             onPressed: () => showModalBottomSheet(
               context: context, 
               isScrollControlled: true, 

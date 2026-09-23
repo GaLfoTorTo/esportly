@@ -100,7 +100,7 @@ class _GameRandomTeamsPageState extends ConsumerState<GameRandomTeamsPage> {
     final match = ref.read(gameMatchProvider);
     if (match.teamA.players.length == qtdPlayers && match.teamB.players.length == qtdPlayers) {
       ref.read(gameMatchProvider.notifier).setIsGameReady(true);
-      context.go('/games/overview');
+      context.pop();
     } else {
       AppHelper.feedbackMessage(context, "Os times não tem jogadores suficientes para continuar");
     }

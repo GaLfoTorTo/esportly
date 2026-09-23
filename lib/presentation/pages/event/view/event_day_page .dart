@@ -9,7 +9,6 @@ import 'package:esportly/core/theme/app_colors.dart';
 import 'package:esportly/data/models/event_model.dart';
 import 'package:esportly/data/models/user_model.dart';
 import 'package:esportly/core/providers/game/game_schedule_provider.dart';
-import 'package:esportly/core/providers/game/game_stream_provider.dart';
 import 'package:esportly/presentation/widget/bars/header_widget.dart';
 import 'package:esportly/presentation/widget/badges/position_widget.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
@@ -21,21 +20,20 @@ import 'package:esportly/presentation/widget/cards/card_player_game_widget.dart'
 import 'package:esportly/presentation/widget/images/img_circle_widget.dart';
 import 'package:esportly/presentation/widget/indicators/indicator_page_widget.dart';
 
-class GamesDayPage extends ConsumerStatefulWidget {
-  const GamesDayPage({super.key});
+class EventDayPage extends ConsumerStatefulWidget {
+  const EventDayPage({super.key});
 
   @override
-  ConsumerState<GamesDayPage> createState() => _GamesDayPageState();
+  ConsumerState<EventDayPage> createState() => EventDayPageState();
 }
 
-class _GamesDayPageState extends ConsumerState<GamesDayPage> {
+class EventDayPageState extends ConsumerState<EventDayPage> {
   late final PageController nextGamesController;
 
   @override
   void initState() {
     super.initState();
     nextGamesController = PageController();
-    ref.read(gameStreamProvider.notifier).connectChannel(uuid: "event-123");
   }
 
   @override

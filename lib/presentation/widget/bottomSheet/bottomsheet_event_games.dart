@@ -56,8 +56,9 @@ class BottomSheetEventGames extends ConsumerWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       ref.read(gameSessionProvider.notifier).setGame(game);
+                      final router = GoRouter.of(context);
                       Navigator.of(context).pop();
-                      context.go('/games/overview');
+                      router.push('/games/overview');
                     },
                     child: Column(
                       children: [

@@ -51,7 +51,7 @@ class _CardGameLiveWidgetState extends ConsumerState<CardGameLiveWidget> {
     return InkWell(
       onTap: () {
         ref.read(gameSessionProvider.notifier).setGame(widget.game);
-        context.go('/games/overview');
+        context.push('/games/overview');
       },
       borderRadius: BorderRadius.circular(20),
       child: Container(

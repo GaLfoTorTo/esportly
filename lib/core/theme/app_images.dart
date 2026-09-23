@@ -25,7 +25,7 @@ class AppImages {
   //IMAGENS PARA BACKGROUND DE CARDS
   static const cardFootball = "assets/images/cards/football_card.jpg";
   static const cardFutsal = "assets/images/cards/futsal_card.jpg";
-  static const cardFutvolei = "assets/images/cards/futvolei_card.jpg";
+  static const cardFutvolei = "assets/images/cards/futvolei_card.png";
   static const cardVolleyball = "assets/images/cards/volleyball_card.jpg";
   static const cardBeachVolleyball = "assets/images/cards/beach_volleyball_card.jpg";
   static const cardBasketball = "assets/images/cards/basketball_card.jpg";

@@ -109,11 +109,11 @@ class _CardGameDetailWidgetState extends ConsumerState<CardGameDetailWidget> {
                   child: Column(
                     children: [
                       Text(
-                        currentGame?.teams?.first.name ?? '',
+                        (currentGame?.teams?.isNotEmpty ?? false) ? currentGame!.teams!.first.name ?? '' : '',
                         style: Theme.of(context).textTheme.titleMedium!.copyWith(color: modalityTextColor),
                       ),
                       SvgPicture.asset(
-                        AppIcones.emblemas[currentGame?.teams?.first.emblem] ?? AppIcones.emblemas['emblema_1']!,
+                        AppIcones.emblemas[(currentGame?.teams?.isNotEmpty ?? false) ? currentGame!.teams!.first.emblem : null] ?? AppIcones.emblemas['emblema_1']!,
                         width: 100,
                         height: 100,
                         colorFilter: ColorFilter.mode(modalityTextColor, BlendMode.srcIn),
@@ -196,11 +196,11 @@ class _CardGameDetailWidgetState extends ConsumerState<CardGameDetailWidget> {
                   child: Column(
                     children: [
                       Text(
-                        currentGame?.teams?.last.name ?? '',
+                        (currentGame?.teams?.length ?? 0) >= 2 ? currentGame!.teams!.last.name ?? '' : '',
                         style: Theme.of(context).textTheme.titleMedium!.copyWith(color: modalityTextColor),
                       ),
                       SvgPicture.asset(
-                        AppIcones.emblemas[currentGame?.teams?.last.emblem] ?? AppIcones.emblemas['emblema_2']!,
+                        AppIcones.emblemas[(currentGame?.teams?.length ?? 0) >= 2 ? currentGame!.teams!.last.emblem : null] ?? AppIcones.emblemas['emblema_2']!,
                         width: 100,
                         height: 100,
                         colorFilter: ColorFilter.mode(modalityTextColor, BlendMode.srcIn),
@@ -218,8 +218,9 @@ class _CardGameDetailWidgetState extends ConsumerState<CardGameDetailWidget> {
           Builder(builder: (_) {
             final game = currentGame;
             if (game == null) return const SizedBox.shrink();
-            final temAGameEvents = gameEvents.where((t) => t.teamId == game.teams?.first.id).toList();
-            final temBGameEvents = gameEvents.where((t) => t.teamId == game.teams?.last.id).toList();
+            final hasTeams = (game.teams?.length ?? 0) >= 2;
+            final temAGameEvents = hasTeams ? gameEvents.where((t) => t.teamId == game.teams!.first.id).toList() : <GameEventModel>[];
+            final temBGameEvents = hasTeams ? gameEvents.where((t) => t.teamId == game.teams!.last.id).toList() : <GameEventModel>[];
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(2, (i) {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:esportly/core/theme/app_colors.dart';
+import 'package:esportly/presentation/widget/skeletons/skeleton_game_overview_widget.dart';
 import 'package:esportly/core/helpers/modality_helper.dart';
 import 'package:esportly/core/helpers/event_helper.dart';
 import 'package:esportly/core/helpers/img_helper.dart';
@@ -32,7 +33,7 @@ class GameOverviewPage extends ConsumerWidget {
     final votes = ref.watch(gameVotesProvider);
 
     if (session.event == null || session.currentGame == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const SkeletonGameOverviewWidget();
     }
 
     final event = session.event!;
@@ -40,8 +41,30 @@ class GameOverviewPage extends ConsumerWidget {
       event.gameConfig?.category ?? event.modality!.name,
     )['color'] as Color;
 
-    final TeamModel teamA = session.currentGame!.teams!.first;
-    final TeamModel teamB = session.currentGame!.teams!.last;
+    final teams = session.currentGame!.teams;
+    if (teams == null || teams.length < 2) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 12,
+          children: [
+            Icon(Icons.groups, size: 60, color: modalityColor),
+            Text(
+              "Equipes ainda não definidas",
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppColors.grey_500),
+            ),
+            Text(
+              "Configure as equipes para visualizar o resumo da partida.",
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(color: AppColors.grey_500),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    final TeamModel teamA = teams.first;
+    final TeamModel teamB = teams.last;
     final double team1Value = votes.votesGame['team1'] ?? 0.0;
     final double team2Value = votes.votesGame['team2'] ?? 0.0;
 

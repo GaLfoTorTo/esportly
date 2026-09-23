@@ -292,7 +292,7 @@ class ModalityHelper {
         return {
           "color" : AppColors.green_300,
           "bg" : AppColors.green_500,
-          "textColor" : AppColors.white,
+          "textColor" : AppColors.blue_500,
           "image" : AppImages.cardFootball
           };
     }

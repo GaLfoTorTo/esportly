@@ -69,9 +69,9 @@ class TeamModel {
 
   factory TeamModel.fromMap(Map<String, dynamic> map) {
     return TeamModel(
-      id: map['id'] as int,
-      gameId: map['gameId'] as int,
-      uuid: map['uuid'] as String,
+      id: map['id'] as int?,
+      gameId: map['gameId'] as int?,
+      uuid: map['uuid'] as String?,
       name: map['name'] != null ? map['name'] as String : null,
       emblem: map['emblem'] != null ? map['emblem'] as String : null,
       players: map['players'] != null

@@ -1,3 +1,6 @@
+import 'package:esportly/core/di/service_locator.dart';
+import 'package:esportly/core/helpers/app_helper.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/data/models/event_model.dart';
@@ -88,20 +91,21 @@ class GameScheduleNotifier extends Notifier<GameScheduleState> {
   Future<void> getGames() async {
     state = state.copyWith(loading: true);
     try {
-      await Future.delayed(const Duration(seconds: 3));
       final List<GameModel>? games = await _eventRepository.getGamesEvent(state.event!.uuid!);
+      print(games?[0]);
       if (games != null) {
         if (isToday()) {
           state = state.copyWith(nextGames: games, hasGames: true, loading: false);
         } else {
           state = state.copyWith(scheduledGames: games, hasGames: true, loading: false);
         }
-      } else {
-        state = state.copyWith(hasGames: false, loading: false);
       }
-    } catch (_) {
-      state = state.copyWith(hasGames: false, loading: false);
+    } catch (e) {
+      state = state.copyWith(error: true);
+      final ctx = sl<GoRouter>().routerDelegate.navigatorKey.currentContext;
+      if (ctx != null) AppHelper.feedbackMessage(ctx, AppHelper.extractErrorMessage(e));
     }
+    state = state.copyWith(hasGames: false, loading: false);
   }
 
   //FUNÇÃO DE BUSCA DE HISTÓRICO DE PARTIDAS DO EVENTO

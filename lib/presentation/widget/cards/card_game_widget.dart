@@ -83,7 +83,7 @@ class _CardGameWidgetState extends ConsumerState<CardGameWidget> {
           //DEFINIR PARTIDA ATUAL
           ref.read(gameSessionProvider.notifier).setGame(widget.game);
           //NAVEGAR PARA PAGINA DE DETALHES DO JOGO
-          context.go('/games/overview');
+          context.push('/games/overview');
         }
       },
       borderRadius: BorderRadius.circular(20),

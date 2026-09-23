@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:esportly/data/models/event_model.dart';
-import 'package:esportly/core/helpers/modality_helper.dart';
 import 'package:esportly/core/theme/app_icones.dart';
 import 'package:esportly/core/theme/app_colors.dart';
+import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
 import 'package:esportly/core/providers/game/game_match_provider.dart';
-import 'package:esportly/core/providers/game/game_day_event_provider.dart';
 import 'package:esportly/presentation/pages/games/detail/game_escalation_page.dart';
 import 'package:esportly/presentation/pages/games/detail/game_overview_page.dart';
 import 'package:esportly/presentation/pages/games/detail/game_statistics_page.dart';
@@ -24,12 +22,7 @@ class GameDetailPage extends ConsumerStatefulWidget {
   ConsumerState<GameDetailPage> createState() => GameDetailPageState();
 }
 
-class GameDetailPageState extends ConsumerState<GameDetailPage>
-    with SingleTickerProviderStateMixin {
-  late EventModel event;
-  late Color modalityColor;
-  late Color modalityTextColor;
-  late String modalityImage;
+class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTickerProviderStateMixin {
   late TabController tabController;
   final ScrollController scrollController = ScrollController();
   double tabMargin = 10.0;
@@ -40,21 +33,7 @@ class GameDetailPageState extends ConsumerState<GameDetailPage>
     super.initState();
     tabController = TabController(length: 4, vsync: this);
     scrollController.addListener(handleScroll);
-
-    final session = ref.read(gameSessionProvider);
-    event = session.event!;
-    modalityColor = ModalityHelper.getEventModalityColor(
-      event.gameConfig?.category ?? event.modality!.name,
-    )['color'];
-    modalityTextColor = ModalityHelper.getEventModalityColor(
-      event.gameConfig?.category ?? event.modality!.name,
-    )['textColor'];
-    modalityImage = ModalityHelper.getEventModalityColor(
-      event.gameConfig?.category ?? event.modality!.name,
-    )['image'];
-
-    ref.read(gameDayEventProvider.notifier).addParticipantsPresents();
-
+    //ref.read(gameDayEventProvider.notifier).addParticipantsPresents();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!ref.read(gameMatchProvider).isGameReady) {
         showDialog(context: context, builder: (_) => const DialogAlertStart());
@@ -69,6 +48,7 @@ class GameDetailPageState extends ConsumerState<GameDetailPage>
     super.dispose();
   }
 
+  //FUNÇÃO DE ALTERAÇÃO DE SCROLL
   void handleScroll() {
     final double pos = scrollController.position.pixels;
     setState(() { tabMargin = pos >= 300 ? 0 : 10; });
@@ -77,8 +57,13 @@ class GameDetailPageState extends ConsumerState<GameDetailPage>
   @override
   Widget build(BuildContext context) {
     final dimensions = MediaQuery.of(context).size;
+    final eventSession = ref.watch(eventSessionProvider);
     final session = ref.watch(gameSessionProvider);
     final match = ref.watch(gameMatchProvider);
+    final event = session.event!;
+    final modalityColor = eventSession.modalityColor;
+    final modalityTextColor = eventSession.modalityTextColor;
+    final modalityImage = eventSession.modalityImage;
 
     const List<String> tabs = ['Resumo', 'Escalações', 'Estatísticas', 'Timeline'];
 

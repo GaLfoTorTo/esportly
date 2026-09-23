@@ -40,7 +40,11 @@ class DialogAlertStart extends StatelessWidget {
                   text: "Escalar equipes",
                   width: dimensions.width,
                   icon: Icons.people_rounded,
-                  action: () => context.go('/games/teams')
+                  action: () {
+                    final router = GoRouter.of(context);
+                    Navigator.of(context).pop();
+                    router.push('/games/teams');
+                  }
                 ),
                 ButtonOutlineWidget(
                   text: "Escalar depois",

@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/pages/event/error/erro_event_page.dart';
-import 'package:esportly/presentation/widget/indicators/indicator_loading_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_event_list_widget.dart';
 import 'package:esportly/presentation/widget/bars/header_widget.dart';
 
@@ -22,9 +21,6 @@ class EventListPage extends ConsumerWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Builder(builder: (_) {
-            if (eventSession.loading) {
-              return const Center(child: IndicatorLoadingWidget());
-            }
             if (eventSession.error) {
               return const ErroEventPage();
             }
@@ -36,9 +32,8 @@ class EventListPage extends ConsumerWidget {
                 children: 
                 eventSession.events.map((event) {
                   return InkWell(
-                    onTap: () async {
-                      //DEFINIR EVENTO ATUAL NO PROVIDER E NAVEGAR
-                      await ref.read(eventSessionProvider.notifier).setEvent(event);
+                    onTap: () {
+                      ref.read(eventSessionProvider.notifier).setEvent(event);
                       context.go('/event/view');
                     },
                     child: CardEventListWidget(event: event)

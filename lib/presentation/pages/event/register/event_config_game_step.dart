@@ -1,15 +1,13 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/foundation.dart';
-
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:esportly/core/helpers/app_helper.dart';
 import 'package:esportly/core/helpers/modality_helper.dart';
-import 'package:esportly/presentation/widget/overlays/form_overlay_widget.dart';
 import 'package:esportly/core/helpers/loading_overlay.dart';
-import 'package:go_router/go_router.dart';
-import 'package:flutter/material.dart';
-import 'package:esportly/data/services/game_service.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:esportly/core/theme/app_icones.dart';
 import 'package:esportly/core/theme/app_colors.dart';
+import 'package:esportly/presentation/widget/overlays/form_overlay_widget.dart';
 import 'package:esportly/presentation/widget/bars/header_widget.dart';
 import 'package:esportly/presentation/widget/others/court_widget.dart';
 import 'package:esportly/presentation/widget/buttons/button_outline_widget.dart';
@@ -34,8 +32,6 @@ class EventConfigGameStepState extends State<EventConfigGameStep> {
   NavigationController navigationController = NavigationController.instance;
   //RESGATAR CONTROLLER DE EVENTO
   EventController eventController = EventController.instance;
-  //INSTANCIAR SERVIÇO DE PARTIDAS
-  GameService gameService = GameService();
   //DEFINIR FORMKEY
   final formKey = GlobalKey<FormState>();
   //CONTROLADOR DE VALIDAÇÃO

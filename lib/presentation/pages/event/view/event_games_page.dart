@@ -1,4 +1,3 @@
-import 'package:esportly/core/helpers/modality_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/providers/game/game_schedule_provider.dart';
@@ -39,9 +38,7 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
     String date = DateHelper.getDateLabel(ref.read(gameScheduleProvider).date!);
 
     //ESTADO - ITEMS EVENTO
-    final modalityMap = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality!.name);
-    Color modalityColor = modalityMap['color'];
-    Color modalityTextColor = modalityMap['textColor'];
+    final Color modalityColor = ref.watch(eventSessionProvider.select((s) => s.modalityColor));
 
     return SingleChildScrollView(
       child: Container(
@@ -66,7 +63,7 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
                 return const SkeletonGamesWidget();
               }
 
-              if (!gameSession.hasGames) {
+              if (gameSession.error) {
                 return const ErroGamePage();
               }
 
@@ -100,7 +97,10 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
                         controller: inProgressController,
                         children: [
                           ...gameSession.inProgressGames.take(3).map((game) {
-                            return CardGameLiveWidget(event: event, game: game!);
+                            return CardGameLiveWidget(
+                              event: event, 
+                              game: game!
+                            );
                           }),
                         ],
                       ),
@@ -154,13 +154,16 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
                         );
                       }).toList(),
                     ),
-                    ButtonTextWidget(
-                      text: "Ver Mais ${gameSession.nextGames.length}",
-                      width: 120,
-                      height: 20,
-                      textColor: modalityTextColor,
-                      backgroundColor: modalityColor.withAlpha(20),
-                      action: () => {},
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                      child: ButtonTextWidget(
+                        text: "Ver Mais ${gameSession.nextGames.length}",
+                        width: 120,
+                        height: 20,
+                        textColor: modalityColor,
+                        backgroundColor: modalityColor.withAlpha(20),
+                        action: () => {},
+                      ),
                     ),
                   ]);
                 }

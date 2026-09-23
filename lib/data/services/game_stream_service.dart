@@ -17,7 +17,6 @@ class GameStreamService {
   late Echo<PUSHER.PusherClient, PusherChannel> echo;
 
   //ESTADO - CONEXÃO
-  final String token = AppStorage.read<String>('token') ?? '1235abcd';
   ConnectionState connectionState = ConnectionState.disconnected;
   String? channel;
   bool disposed = false;
@@ -26,7 +25,10 @@ class GameStreamService {
   int maxAttempts = 5;
 
   //FUNÇÃO DE INICIALIZAÇÃO DO SERVIÇO
-  void init() {
+  void init(){
+    //BUSCAR TOKEN
+    final String token = AppStorage.read<String>('token') ?? '1235abcd';
+    //INSTANCIAR WEBSOCKET
     echo = Echo<PUSHER.PusherClient, PusherChannel>(PusherConnector(
       dotenv.env['REVERB_APP_KEY']!,
       authHeaders: () async => {

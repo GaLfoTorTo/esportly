@@ -1,9 +1,14 @@
 import 'package:esportly/core/helpers/app_helper.dart';
+import 'package:esportly/core/helpers/img_helper.dart';
+import 'package:esportly/core/helpers/modality_helper.dart';
 import 'package:esportly/core/providers/event/event_news_provider.dart';
 import 'package:esportly/core/providers/event/event_overview_provider.dart';
 import 'package:esportly/core/providers/event/event_participants_provider.dart';
 import 'package:esportly/core/providers/event/event_rank_provider.dart';
 import 'package:esportly/core/providers/event/event_rules_provider.dart';
+import 'package:esportly/core/theme/app_colors.dart';
+import 'package:esportly/data/repositories/event_repository.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/di/service_locator.dart';
 import 'package:esportly/data/models/event_model.dart';
@@ -21,6 +26,12 @@ class EventSessionState {
   final List<EventModel> events;
   final bool participant;
   final String privacy;
+  //ESTILO - derivado da modalidade e imagem do evento
+  final Color modalityColor;
+  final Color modalityTextColor;
+  final ImageProvider? modalityImage;
+  final bool heroBrightness;
+  final Color heroTextColor;
 
   const EventSessionState({
     this.ready = false,
@@ -31,6 +42,11 @@ class EventSessionState {
     this.events = const [],
     this.participant = false,
     this.privacy = 'Public',
+    this.modalityColor = AppColors.green_300,
+    this.modalityTextColor = AppColors.blue_500,
+    this.modalityImage,
+    this.heroBrightness = false,
+    this.heroTextColor = AppColors.white,
   });
 
   EventSessionState copyWith({
@@ -42,6 +58,11 @@ class EventSessionState {
     List<EventModel>? events,
     bool? participant,
     String? privacy,
+    Color? modalityColor,
+    Color? modalityTextColor,
+    ImageProvider? modalityImage,
+    bool? heroBrightness,
+    Color? heroTextColor,
   }) => EventSessionState(
     ready: ready ?? this.ready,
     error: error ?? this.error,
@@ -51,11 +72,18 @@ class EventSessionState {
     events: events ?? this.events,
     participant: participant ?? this.participant,
     privacy: privacy ?? this.privacy,
+    modalityColor: modalityColor ?? this.modalityColor,
+    modalityTextColor: modalityTextColor ?? this.modalityTextColor,
+    modalityImage: modalityImage ?? this.modalityImage,
+    heroBrightness: heroBrightness ?? this.heroBrightness,
+    heroTextColor: heroTextColor ?? this.heroTextColor,
   );
 }
 
 //NOTIFICADOR - SESSÃO DO EVENTO
 class EventSessionNotifier extends Notifier<EventSessionState> {
+  EventRepository get _eventRepository => EventRepository();
+  
   @override
   EventSessionState build() => const EventSessionState();
 
@@ -94,10 +122,19 @@ class EventSessionNotifier extends Notifier<EventSessionState> {
   Future<void> setEvent(EventModel event) async {
     state = state.copyWith(loading: true);
     try {
+      final newEvent = await _eventRepository.getEvent(event.uuid!);
+      final styleMap = ModalityHelper.getEventModalityColor(newEvent!.gameConfig?.category ?? newEvent.modality!.name);
+      final img = ImgHelper.getEventImg(newEvent);
+      final isDark = await AppHelper.isImageDark(img);
       state = state.copyWith(
-        event: event,
+        event: newEvent,
         participant: event.participants?.where((p) => p.id == state.user!.id).firstOrNull != null,
-        privacy: event.privacy!.name
+        privacy: event.privacy!.name,
+        modalityColor: styleMap['color'],
+        modalityTextColor: styleMap['textColor'],
+        modalityImage: img,
+        heroBrightness: isDark,
+        heroTextColor: isDark ? AppColors.blue_500 : AppColors.white,
       );
       //INICIALIZAR PROVIDERS SECUNDARIOS DE EVENTO
       ref.read(eventOverviewProvider.notifier).init(event);
