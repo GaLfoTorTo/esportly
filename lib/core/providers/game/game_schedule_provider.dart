@@ -92,7 +92,6 @@ class GameScheduleNotifier extends Notifier<GameScheduleState> {
     state = state.copyWith(loading: true);
     try {
       final List<GameModel>? games = await _eventRepository.getGamesEvent(state.event!.uuid!);
-      print(games?[0]);
       if (games != null) {
         if (isToday()) {
           state = state.copyWith(nextGames: games, hasGames: true, loading: false);

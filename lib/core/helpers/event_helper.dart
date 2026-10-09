@@ -1,3 +1,4 @@
+import 'package:esportly/core/helpers/date_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:esportly/core/theme/app_icones.dart';
 import 'package:esportly/data/models/event_model.dart';
@@ -26,6 +27,7 @@ class EventHelper {
     return arr;
   }
   
+  //FUNÇÃO PARA RESGATAR AVALIAÇÕES DO EVENTO
   static double getAvaliation(EventModel event){
     double num = 0.0;
     if(event.avaliations?.isEmpty ?? false) return num;
@@ -34,6 +36,7 @@ class EventHelper {
     });
     return num / event.avaliations!.length;
   }
+  
   //FUNÇÃO PARA RESGATAR JOGADOR DO EVENTO
   static UserModel getUserPlayer(EventModel event, int userId){
     return event.participants!.firstWhere((u){
@@ -50,35 +53,76 @@ class EventHelper {
     });
   }
 
-  //FUNÇÃO DE DEFINIÇÃO DE DEFINIÇÕES DE PARTIDA PARA O EVENTO
+  //FUNÇÃO DE BUSCA DE INFORMAÇÕES DO EVENTO
+  static List<Map<String, dynamic>> getInfoEvent(EventModel event){
+    return [
+      {
+        'label': "Agenda",
+        'icon': Icons.calendar_month_rounded,
+        'value' : DateHelper.getEventDate(event.date!),
+      },
+      {
+        'label': "Horário",
+        'icon': Icons.watch_later,
+        'value' : "${event.startTime!.substring(0,5)} as ${event.endTime!.substring(0,5)}",
+      },
+      {
+        'label': "Modalidade",
+        'icon': AppIcones.modality_solid,
+        'value' : event.modality?.name ?? '',
+      },
+      {
+        'label': "Partiricpants",
+        'icon': Icons.people,
+        'value' : "${event.participants?.length ?? 0}",
+      },
+      {
+        'label': "Categoria",
+        'icon': Icons.category,
+        'value' : event.gameConfig!.category,
+      },
+      {
+        'label': "Partidas",
+        'icon': Icons.sports,
+        'value' : "${event.games?.length ?? 0}",
+      },
+      {
+        'label': "Visibilidade",
+        'icon': Icons.lock,
+        'value' : event.privacy!.name,
+      },
+    ];
+  }
+  
+  //FUNÇÃO DE BUSCA DE INFORMAÇÕES DO CONFIGURAÇÕES DE PARTIDAS
   static List<Map<String, dynamic>> getInfoGameConfig(EventModel event){
-    switch (event.modality!.name) {
+    switch (event.modality?.name) {
       case "Volleyball":
         return [
           {
             'label': "Jogadores por Equipe",
             'icon': Icons.people,
-            'value' : event.gameConfig!.playersPerTeam.toString(),
+            'value' : event.gameConfig!.playersPerTeam?.toString() ?? '',
           },
           {
             'label': "Sets",
             'icon': Icons.safety_divider_rounded,
-            'value' : event.gameConfig!.config!['sets'] != null ? event.gameConfig!.config!['sets'].toString() : '',
+            'value' : event.gameConfig!.config!['sets']?.toString() ?? '',
           },
           {
             'label': "Limite de Pontos",
             'icon': Icons.scoreboard,
-            'value' : event.gameConfig!.points.toString(),
+            'value' : event.gameConfig!.points?.toString() ?? 'Não',
           },
           {
             'label': "Tie Break",
             'icon': Icons.add_alarm_rounded,
-            'value' : event.gameConfig!.config!["tieBreakPoints"] != null ? "Sim" : "Não",
+            'value' : event.gameConfig!.config!["hasTieBreak"] ? "Sim" : "Não",
           },
           {
             'label': "Pontos no Tie Break",
             'icon': Icons.scoreboard,
-            'value' : event.gameConfig!.config!["tieBreakPoints"].toString(),
+            'value' : event.gameConfig!.config!["tieBreakPoints"]?.toString() ?? '',
           },
           {
             'label': "Árbitro",
@@ -91,27 +135,27 @@ class EventHelper {
           {
             'label': "Jogadores por Equipe",
             'icon': Icons.people,
-            'value' : event.gameConfig!.playersPerTeam.toString(),
+            'value' : event.gameConfig!.playersPerTeam?.toString() ?? '',
           },
           {
             'label': "Quarters",
             'icon': Icons.safety_divider_rounded,
-            'value' : event.gameConfig!.config!["quarters"].toString(),
+            'value' : event.gameConfig!.config!["quarters"]?.toString() ?? '',
           },
           {
             'label': "Duração (min)",
             'icon': AppIcones.stopwatch_solid,
-            'value' : event.gameConfig!.duration.toString(),
+            'value' : event.gameConfig!.duration?.toString() ?? '',
           },
           {
             'label': "Shot Clock (seg)",
             'icon': Icons.sports_soccer,
-            'value' : event.gameConfig!.config!["shotClock"].toString(),
+            'value' : event.gameConfig!.config!["shotClock"]?.toString() ?? '',
           },
           {
             'label': "Limite de Pontos",
             'icon': Icons.scoreboard,
-            'value' : event.gameConfig!.config!["point"] != null ? event.gameConfig!.config!["point"].toString() : "Não",
+            'value' : event.gameConfig!.config!["point"]?.toString() ?? "Não",
           },
           {
             'label': "Árbitro",
@@ -124,40 +168,40 @@ class EventHelper {
           {
             'label': "Jogadores por Equipe",
             'icon': Icons.people,
-            'value' : event.gameConfig!.playersPerTeam.toString(),
+            'value' : event.gameConfig!.playersPerTeam?.toString() ?? '',
           },
           {
             'label': "Duração (min)",
             'icon': AppIcones.stopwatch_solid,
-            'value' : event.gameConfig!.duration.toString(),
+            'value' : event.gameConfig!.duration?.toString() ?? '',
           },
           {
             'label': "Limite de Gols",
             'icon': Icons.scoreboard,
-            'value' : event.gameConfig!.config!["point"].toString(),
+            'value' : event.gameConfig!.config!["point"]?.toString() ?? 'Não',
           },
           {
             'label': "2 Tempos",
             'icon': Icons.safety_divider_rounded,
-            'value' : event.gameConfig!.config!["halves"] != null ? "Sim" : "Não",
+            'value' : event.gameConfig!.config!["halves"] ? "Sim" : "Não"
           },
           {
             'label': "Pênaltis",
             'icon': Icons.sports_soccer,
-            'value' : event.gameConfig!.config!["penalty"] != null ? "Sim" : "Não",
+            'value' : event.gameConfig!.config!["penalty"] ? "Sim" : "Não"
           },
           {
             'label': "Árbitro",
             'icon': Icons.sports,
-            'value' : event.gameConfig!.config!["refereerId"] != null ? "Sim" : "Não",
+            'value' : event.gameConfig!.config!["refereerId"] != null ? "Sim" : "Não"
           },
         ];
     }
   }
   
-  //FUNÇÃO DE DEFINIÇÃO DE DEFINIÇÕES DE PARTIDA PARA O EVENTO
+  //FUNÇÃO DE BUSCA DE INFORMAÇÕES DE PARTIDAS
   static List<Map<String, dynamic>> getDetailGame(EventModel event){
-    switch (event.modality!.name) {
+    switch (event.modality?.name) {
       case "Volleyball":
         return [
           {

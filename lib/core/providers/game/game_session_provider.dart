@@ -1,6 +1,6 @@
 import 'package:esportly/core/di/service_locator.dart';
 import 'package:esportly/core/helpers/app_helper.dart';
-import 'package:esportly/core/providers/game/game_day_event_provider.dart';
+import 'package:esportly/core/providers/game/game_day_provider.dart';
 import 'package:esportly/core/providers/game/game_stopwatch_provider.dart';
 import 'package:esportly/core/providers/game/game_stream_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -67,7 +67,6 @@ class GameSessionNotifier extends Notifier<GameSessionState> {
       ref.read(gameScheduleProvider.notifier).init(event);
       ref.read(gameStreamProvider.notifier).init(event);
     } catch (e) {
-
       state = state.copyWith(error: true);
       final ctx = sl<GoRouter>().routerDelegate.navigatorKey.currentContext;
       if (ctx != null) AppHelper.feedbackMessage(ctx, AppHelper.extractErrorMessage(e));
@@ -77,7 +76,7 @@ class GameSessionNotifier extends Notifier<GameSessionState> {
 
   //FUNÇÃO DE RESET COMPLETO
   void dispose() {
-    ref.invalidate(gameDayEventProvider);
+    ref.invalidate(gameDayProvider);
     ref.invalidate(gameMatchProvider);
     ref.invalidate(gameScheduleProvider);
     ref.invalidate(gameVotesProvider);
@@ -90,6 +89,10 @@ class GameSessionNotifier extends Notifier<GameSessionState> {
   void setGame(GameModel game) {
     state = state.copyWith(currentGame: game);
     ref.read(gameMatchProvider.notifier).setTeamsFromGame(game);
+    final participantIds = (state.event?.participants ?? [])
+        .map((p) => p.uuid!)
+        .toList();
+    ref.read(gameVotesProvider.notifier).initVotes(participantIds);
   }
 
   //FUNÇÃO DE DEFINIÇÃO DE CONFIGURAÇÕES DE PARTIDA
@@ -166,7 +169,10 @@ class GameSessionNotifier extends Notifier<GameSessionState> {
 
     ref.read(gameMatchProvider.notifier).updateTeams(newTeamA, newTeamB);
     ref.read(gameScheduleProvider.notifier).updateGameInSchedule(updatedGame);
-    ref.read(gameVotesProvider.notifier).initVotes();
+    final participantIds = (state.event?.participants ?? [])
+        .map((p) => p.uuid!)
+        .toList();
+    ref.read(gameVotesProvider.notifier).initVotes(participantIds);
   }
 
   //FUNÇÃO DE VERIFICAÇÃO DE PARTIDA OK

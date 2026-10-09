@@ -1,3 +1,4 @@
+import 'package:esportly/core/providers/game/game_day_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -33,7 +34,8 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
     super.initState();
     tabController = TabController(length: 4, vsync: this);
     scrollController.addListener(handleScroll);
-    //ref.read(gameDayEventProvider.notifier).addParticipantsPresents();
+    //INICIAR PARTICIPANTES
+    ref.read(gameDayProvider.notifier).init();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!ref.read(gameMatchProvider).isGameReady) {
         showDialog(context: context, builder: (_) => const DialogAlertStart());

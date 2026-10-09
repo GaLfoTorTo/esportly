@@ -21,21 +21,21 @@ class EventGamesPage extends ConsumerStatefulWidget {
 
 class _EventGamesPageState extends ConsumerState<EventGamesPage> {
   late PageController inProgressController;
-  late EventModel event;
 
   @override
   void initState() {
     super.initState();
-    event = ref.read(eventSessionProvider).event!;
     inProgressController = PageController();
   }
 
   @override
   Widget build(BuildContext context) {
     var dimensions = MediaQuery.of(context).size;
+    final EventModel event = ref.watch(eventSessionProvider.select((s) => s.event!));
     final gameSession = ref.watch(gameScheduleProvider);
     final isToday = ref.read(gameScheduleProvider.notifier).isToday();
-    String date = DateHelper.getDateLabel(ref.read(gameScheduleProvider).date!);
+    final scheduleDate = ref.read(gameScheduleProvider).date;
+    String date = scheduleDate != null ? DateHelper.getDateLabel(scheduleDate) : '';
 
     //ESTADO - ITEMS EVENTO
     final Color modalityColor = ref.watch(eventSessionProvider.select((s) => s.modalityColor));

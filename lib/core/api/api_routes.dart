@@ -34,9 +34,16 @@ class ApiRoutes {
   static const eventDelete = 'events/delete/';
   static const eventParticipants = 'events/participants/';
   //ROTAS DE MAPAS
-  static String mapUrl(Brightness brightness) => brightness == Brightness.dark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-    : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
+  static String mapUrl(Brightness brightness) {
+    final apiKey = dotenv.env["MAP_API_KEY"];
+    if (apiKey != null && apiKey.isNotEmpty) {
+      return brightness == Brightness.dark
+        ? "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}@2x.png?api_key=$apiKey"
+        : "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}@2x.png?api_key=$apiKey";
+    }
+    return alternativeMap;
+  }
+  static bool usesCartoTiles() => false;
   static const alternativeMap = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   //ROTAS DE PESQUISA DE ENDEREÇOS
   static const mapReverse = "https://nominatim.openstreetmap.org/reverse";

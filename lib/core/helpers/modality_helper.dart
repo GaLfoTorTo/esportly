@@ -249,7 +249,7 @@ class ModalityHelper {
         return {
           "color" : AppColors.yellow_300,
           "bg" : AppColors.yellow_500,
-          "textColor" : AppColors.white,
+          "textColor" : AppColors.blue_500,
           "image" : AppImages.cardVolleyball
           };
       case "Volei de praia":

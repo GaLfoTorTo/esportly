@@ -34,7 +34,7 @@ class EventListPage extends ConsumerWidget {
                   return InkWell(
                     onTap: () {
                       ref.read(eventSessionProvider.notifier).setEvent(event);
-                      context.go('/event/view');
+                      context.push('/event/view');
                     },
                     child: CardEventListWidget(event: event)
                   );

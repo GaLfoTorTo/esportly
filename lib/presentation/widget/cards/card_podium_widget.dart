@@ -22,7 +22,7 @@ class CardPodiumWidget extends StatelessWidget {
     var dimensions = MediaQuery.of(context).size;
 
     //ESTADO - ITEMS EVENTO
-    final modalityMap = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality!.name);
+    final modalityMap = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality?.name ?? 'Football');
     String modalityImage = modalityMap['image'];
     Color modalityColor = modalityMap['color'];
     Color modalityTextColor = modalityMap['textColor'];

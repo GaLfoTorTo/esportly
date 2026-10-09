@@ -34,9 +34,9 @@ class _CardGameLiveWidgetState extends ConsumerState<CardGameLiveWidget> {
   @override
   void initState() {
     super.initState();
-    modalityColor = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality!.name)['color'];
-    modalityTextColor = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality!.name)['textColor'];
-    modalityImage = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality!.name)['image'];
+    modalityColor = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality?.name ?? 'Football')['color'];
+    modalityTextColor = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality?.name ?? 'Football')['textColor'];
+    modalityImage = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality?.name ?? 'Football')['image'];
   }
 
   @override

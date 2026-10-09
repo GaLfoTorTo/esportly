@@ -1,10 +1,12 @@
 import 'package:esportly/core/di/service_locator.dart';
+import 'package:esportly/core/helpers/app_helper.dart';
 import 'package:esportly/core/helpers/event_helper.dart';
 import 'package:esportly/core/helpers/map_helper.dart';
 import 'package:esportly/data/models/user_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/data/models/event_model.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 //ESTADO - VISÃO GERAL / SUGESTÕES DE EVENTOS
@@ -66,18 +68,24 @@ class EventOverviewNotifier extends Notifier<EventOverviewState> {
 
   //FUNÇÃO DE INICIALIZAÇÃO
   void init(EventModel event) {
-    final latLon = LatLng(event.address!.latitude!, event.address!.longitude!);
-
-    final (distance, time) = _computeTravel(latLon, 'walking');
-
-    state = state.copyWith(
-      event: event,
-      avaliation: EventHelper.getAvaliation(event),
-      organizador: EventHelper.getUserOrganizator(event),
-      latLon: latLon,
-      travelDistance: distance,
-      travelTime: time,
-    );
+    try {
+      final lat = event.address?.latitude;
+      final lon = event.address?.longitude;
+      final latLon = (lat != null && lon != null) ? LatLng(lat, lon) : null;
+      final (distance, time) = _computeTravel(latLon, 'walking');
+      state = state.copyWith(
+        event: event,
+        avaliation: EventHelper.getAvaliation(event),
+        organizador: EventHelper.getUserOrganizator(event),
+        latLon: latLon,
+        travelDistance: distance,
+        travelTime: time,
+      );
+    } catch (e) {
+      state = state.copyWith(event: event, error: true);
+      final ctx = sl<GoRouter>().routerDelegate.navigatorKey.currentContext;
+      if (ctx != null) AppHelper.feedbackMessage(ctx, AppHelper.extractErrorMessage(e));
+    }
   }
 
   //FUNÇÃO DE DEFINIÇÃO DO MODO DE VIAGEM

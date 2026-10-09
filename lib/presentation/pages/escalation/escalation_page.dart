@@ -66,7 +66,7 @@ class EscalationPageState extends ConsumerState<EscalationPage> {
     final valuation = managerSession.valuation;
     final category = managerSession.category;
     final formation = managerSession.formation;
-    final String modalityImage = ModalityHelper.getEventModalityColor(event!.gameConfig?.category ?? event.modality!.name)['image'];
+    final String modalityImage = ModalityHelper.getEventModalityColor(event!.gameConfig?.category ?? event.modality?.name ?? 'Football')['image'];
     //ESTADOS - ESTILIZAÇÃO
     final dimensions = MediaQuery.of(context).size;
     final isDark = Theme.of(context).brightness == Brightness.dark;

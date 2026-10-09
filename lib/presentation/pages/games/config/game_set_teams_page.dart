@@ -1,18 +1,17 @@
 import 'dart:math';
-import 'package:esportly/core/helpers/modality_helper.dart';
-import 'package:esportly/presentation/widget/indicators/indicator_loading_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:esportly/core/helpers/loading_overlay.dart';
 import 'package:go_router/go_router.dart';
+import 'package:esportly/data/models/user_model.dart';
 import 'package:esportly/core/helpers/user_helper.dart';
 import 'package:esportly/core/theme/app_colors.dart';
 import 'package:esportly/core/theme/app_icones.dart';
 import 'package:esportly/core/helpers/app_helper.dart';
+import 'package:esportly/core/helpers/loading_overlay.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
 import 'package:esportly/core/providers/game/game_match_provider.dart';
-import 'package:esportly/core/providers/game/game_day_event_provider.dart';
-import 'package:esportly/data/models/user_model.dart';
+import 'package:esportly/core/providers/game/game_day_provider.dart';
+import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/widget/bars/header_widget.dart';
 import 'package:esportly/presentation/widget/images/img_circle_widget.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
@@ -23,40 +22,31 @@ import 'package:esportly/presentation/widget/dialogs/dialog_random_team.dart';
 import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_game_players.dart';
 import 'package:esportly/presentation/widget/cards/card_player_game_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_player_present_widget.dart';
+import 'package:esportly/presentation/widget/indicators/indicator_loading_widget.dart';
 
-class GameRandomTeamsPage extends ConsumerStatefulWidget {
-  const GameRandomTeamsPage({super.key});
+class GameSetTeamsPage extends ConsumerStatefulWidget {
+  const GameSetTeamsPage({super.key});
 
   @override
-  ConsumerState<GameRandomTeamsPage> createState() => _GameRandomTeamsPageState();
+  ConsumerState<GameSetTeamsPage> createState() => _GameSetTeamsPageState();
 }
 
-class _GameRandomTeamsPageState extends ConsumerState<GameRandomTeamsPage> {
+class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
   late Color modalityColor;
   List<UserModel> participantsPresentClone = [];
   bool teamDefined = false;
   bool reorderList = false;
   late int qtdPlayers;
-  late TextEditingController teamANameController;
-  late TextEditingController teamBNameController;
 
   @override
   void initState() {
     super.initState();
-    final session = ref.read(gameSessionProvider);
-    final match = ref.read(gameMatchProvider);
-    final event = session.event!;
+    final gameSession = ref.read(gameSessionProvider);
 
-    modalityColor = ModalityHelper.getEventModalityColor(
-      event.gameConfig?.category ?? event.modality!.name,
-    )['color'];
-    qtdPlayers = session.config?.playersPerTeam ?? 0;
-
-    teamANameController = TextEditingController(text: match.teamA.name ?? 'Time 1');
-    teamBNameController = TextEditingController(text: match.teamB.name ?? 'Time 2');
+    qtdPlayers = gameSession.config?.playersPerTeam ?? 0;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final participantsPresent = ref.read(gameDayEventProvider).participantsPresent;
+      final participantsPresent = ref.read(gameDayProvider).participantsPresent;
       if (participantsPresent.length < qtdPlayers * 2) {
         showDialog(context: context, builder: (_) => const DialogAlertTeam());
       } else {
@@ -68,37 +58,34 @@ class _GameRandomTeamsPageState extends ConsumerState<GameRandomTeamsPage> {
     });
   }
 
-  @override
-  void dispose() {
-    teamANameController.dispose();
-    teamBNameController.dispose();
-    super.dispose();
-  }
-
-  Future<void> assignPlayersToTeams(bool randomize) async {
+  //FUNÇÃO DE ADIÇÃO DE JOGADORES A EQUIPE
+  Future<void> setPlayersToTeam(bool randomize) async {
     await Future.delayed(const Duration(seconds: 2));
-    final present = ref.read(gameDayEventProvider).participantsPresent;
-    var players = present.take(qtdPlayers * 2).toList();
-    final remaining = present.skip(qtdPlayers * 2).toList();
+    final presents = ref.read(gameDayProvider).participantsPresent;
+    var players = presents.take(qtdPlayers * 2).toList();
+    final remaining = presents.skip(qtdPlayers * 2).toList();
     if (randomize) players = [...players]..shuffle(Random());
-    ref.read(gameDayEventProvider.notifier).setParticipantsPresent(remaining);
+    ref.read(gameDayProvider.notifier).setParticipantsPresent(remaining);
     ref.read(gameMatchProvider.notifier).setTeamPlayers(0, players.take(qtdPlayers).toList());
     ref.read(gameMatchProvider.notifier).setTeamPlayers(1, players.skip(qtdPlayers).take(qtdPlayers).toList());
   }
 
+  //FUNÇÃO DE RESET DE EQUIPES
   Future<void> resetTeams() async {
     await Future.delayed(const Duration(seconds: 2));
-    final match = ref.read(gameMatchProvider);
-    final current = ref.read(gameDayEventProvider).participantsPresent;
-    final allPresent = [...current, ...match.teamA.players, ...match.teamB.players];
-    ref.read(gameDayEventProvider.notifier).setParticipantsPresent(allPresent);
+    final matchSession = ref.read(gameMatchProvider);
+    final current = ref.read(gameDayProvider).participantsPresent;
+    final allPresent = [...current, ...matchSession.teamA.players, ...matchSession.teamB.players];
+    ref.read(gameDayProvider.notifier).setParticipantsPresent(allPresent);
     ref.read(gameMatchProvider.notifier).setTeamPlayers(0, []);
     ref.read(gameMatchProvider.notifier).setTeamPlayers(1, []);
   }
 
-  void setTeams() {
-    final match = ref.read(gameMatchProvider);
-    if (match.teamA.players.length == qtdPlayers && match.teamB.players.length == qtdPlayers) {
+  //FUNÇÃO DE DEFINIÇÃO DE EQUIPES
+  Future<void> setTeams() async{
+    await Future.delayed(const Duration(seconds: 2));
+    final matchSession = ref.read(gameMatchProvider);
+    if (matchSession.teamA.players.length == qtdPlayers && matchSession.teamB.players.length == qtdPlayers) {
       ref.read(gameMatchProvider.notifier).setIsGameReady(true);
       context.pop();
     } else {
@@ -106,17 +93,18 @@ class _GameRandomTeamsPageState extends ConsumerState<GameRandomTeamsPage> {
     }
   }
 
-  void setOrderParticipants(String action) {
+  //FUNÇÃO DE ORDENAÇÃO DE EQUIPES
+  void setOrder(String action) {
     switch (action) {
       case "accept":
         participantsPresentClone = [];
         break;
       case "cancel":
-        ref.read(gameDayEventProvider.notifier).setParticipantsPresent(participantsPresentClone.toList());
+        ref.read(gameDayProvider.notifier).setParticipantsPresent(participantsPresentClone.toList());
         break;
       case "reset":
-        ref.read(gameDayEventProvider.notifier).setParticipantsPresent(
-          ref.read(gameDayEventProvider).participantsClone.toList(),
+        ref.read(gameDayProvider.notifier).setParticipantsPresent(
+          ref.read(gameDayProvider).participantsClone.toList(),
         );
         break;
     }
@@ -127,12 +115,16 @@ class _GameRandomTeamsPageState extends ConsumerState<GameRandomTeamsPage> {
   @override
   Widget build(BuildContext context) {
     var dimensions = MediaQuery.of(context).size;
-    final match = ref.watch(gameMatchProvider);
-    final dayEvent = ref.watch(gameDayEventProvider);
-    final participantsPresent = dayEvent.participantsPresent;
-    final session = ref.read(gameSessionProvider);
-    final event = session.event!;
+    //PROVIDERS
+    final eventSession = ref.read(eventSessionProvider);
+    final gameSession = ref.read(gameSessionProvider);
+    final matchSession = ref.watch(gameMatchProvider);
+    final daySession = ref.watch(gameDayProvider);
+    //ESTADOS
+    final event = gameSession.event!;
     final modality = event.modality?.name ?? '';
+    final modalityColor = eventSession.modalityColor;
+    final participantsPresent = daySession.participantsPresent;
 
     return Scaffold(
       appBar: HeaderWidget(
@@ -185,9 +177,9 @@ class _GameRandomTeamsPageState extends ConsumerState<GameRandomTeamsPage> {
                       spacing: 5,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: List.generate(2, (i) {
-                        final teamPlayers = i == 0 ? match.teamA.players : match.teamB.players;
-                        final teamLength = i == 0 ? match.teamAlength : match.teamBlength;
-                        final teamName = i == 0 ? teamANameController.text : teamBNameController.text;
+                        final teamPlayers = i == 0 ? matchSession.teamA.players : matchSession.teamB.players;
+                        final teamLength = i == 0 ? matchSession.teamAlength : matchSession.teamBlength;
+                        final teamName = i == 0 ? matchSession.teamA.name : matchSession.teamB.name;
 
                         return Expanded(
                           child: Column(
@@ -361,19 +353,19 @@ class _GameRandomTeamsPageState extends ConsumerState<GameRandomTeamsPage> {
                                   text: "Cancelar", icon: Icons.close,
                                   width: 100, height: 20,
                                   textColor: AppColors.red_300, backgroundColor: Colors.transparent,
-                                  action: () => setOrderParticipants("cancel"),
+                                  action: () => setOrder("cancel"),
                                 ),
                                 ButtonTextWidget(
                                   text: "Resetar", icon: Icons.restart_alt_rounded,
                                   width: 100, height: 20,
                                   textColor: AppColors.grey_300, backgroundColor: Colors.transparent,
-                                  action: () => setOrderParticipants("reset"),
+                                  action: () => setOrder("reset"),
                                 ),
                                 ButtonTextWidget(
                                   text: "Definir", icon: Icons.check,
                                   width: 100, height: 20,
                                   textColor: AppColors.green_300, backgroundColor: Colors.transparent,
-                                  action: () => setOrderParticipants("accept"),
+                                  action: () => setOrder("accept"),
                                 ),
                               ],
                             ),
@@ -382,7 +374,7 @@ class _GameRandomTeamsPageState extends ConsumerState<GameRandomTeamsPage> {
                               child: ReorderableListView(
                                 physics: const NeverScrollableScrollPhysics(),
                                 onReorder: (oldIndex, newIndex) =>
-                                    ref.read(gameDayEventProvider.notifier).reorderParticipants(oldIndex, newIndex),
+                                    ref.read(gameDayProvider.notifier).reorderParticipants(oldIndex, newIndex),
                                 proxyDecorator: (child, index, animation) {
                                   return AnimatedBuilder(
                                     animation: animation,
@@ -481,11 +473,11 @@ class _GameRandomTeamsPageState extends ConsumerState<GameRandomTeamsPage> {
               context: context,
               builder: (_) => DialogRandomTeam(
                 actionRandom: () async {
-                  await assignPlayersToTeams(true);
+                  await setPlayersToTeam(true);
                   setState(() { teamDefined = true; });
                 },
                 actionOrder: () async {
-                  await assignPlayersToTeams(false);
+                  await setPlayersToTeam(false);
                   setState(() { teamDefined = true; });
                 },
               ),

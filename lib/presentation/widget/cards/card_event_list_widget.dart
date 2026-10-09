@@ -1,3 +1,4 @@
+import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/theme/app_colors.dart';
@@ -21,9 +22,9 @@ class CardEventListWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     //RESGATAR DIMENSÕES DO DISPOSITIVO
     final dimensions = MediaQuery.of(context).size;
+    final eventSession = ref.watch(eventSessionProvider);
     final AvaliationService avaliationService = AvaliationService();
     final inLive = ref.watch(gameScheduleProvider.select((s) => s.inProgressGames.isNotEmpty));
-    final String modalityImage = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality!.name)['image'];
     final double avaliations = avaliationService.getRatingAvaliation(event.avaliations);
     final String eventDate = DateHelper.getEventDate(event.date!);
 
@@ -38,9 +39,7 @@ class CardEventListWidget extends ConsumerWidget {
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.only(topLeft: Radius.circular(10), topRight: Radius.circular(10)),
               image: DecorationImage(
-                image: event.photo == null
-                  ? AssetImage(modalityImage) as ImageProvider
-                  : ImgHelper.getEventImg(event),
+                image: eventSession.modalityImage ?? ImgHelper.getEventImg(event),
                 fit: BoxFit.cover,
               ),
             ),

@@ -4,31 +4,31 @@ import 'package:esportly/data/models/user_model.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
 
 //ESTADO - GAME DAY
-class GameDayEventState {
+class GameDayState {
   final List<UserModel> participantsClone;
   final List<UserModel> participantsPresent;
 
-  const GameDayEventState({
+  const GameDayState({
     this.participantsClone = const [],
     this.participantsPresent = const [],
   });
 
-  GameDayEventState copyWith({
+  GameDayState copyWith({
     List<UserModel>? participantsClone,
     List<UserModel>? participantsPresent,
-  }) => GameDayEventState(
+  }) => GameDayState(
     participantsClone: participantsClone ?? this.participantsClone,
     participantsPresent: participantsPresent ?? this.participantsPresent,
   );
 }
 
 //NOTIFICADOR - GAME DAY 
-class GameDayEventNotifier extends Notifier<GameDayEventState> {
+class GameDayEventNotifier extends Notifier<GameDayState> {
   @override
-  GameDayEventState build() => const GameDayEventState();
+  GameDayState build() => const GameDayState();
 
   //FUNÇÃO DE AÇÃO DE PARTICIPANTE PRESENTE
-  void addParticipantsPresents() {
+  void init() {
     final event = ref.read(gameSessionProvider).event;
     if (event?.participants == null) return;
 
@@ -39,7 +39,10 @@ class GameDayEventNotifier extends Notifier<GameDayEventState> {
         present.add(user);
       }
     }
-    state = state.copyWith(participantsClone: present, participantsPresent: present);
+    state = state.copyWith(
+      participantsClone: present, 
+      participantsPresent: present
+    );
   }
 
   //FUNÇÃO DE DEFINIÇÃO DE PARTICIPANTE PRESENTE
@@ -57,4 +60,4 @@ class GameDayEventNotifier extends Notifier<GameDayEventState> {
   }
 }
 //PROVIDER - GAME DAY
-final gameDayEventProvider = NotifierProvider<GameDayEventNotifier, GameDayEventState>(GameDayEventNotifier.new);
+final gameDayProvider = NotifierProvider<GameDayEventNotifier, GameDayState>(GameDayEventNotifier.new);

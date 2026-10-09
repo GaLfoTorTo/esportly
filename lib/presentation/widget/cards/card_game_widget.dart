@@ -49,9 +49,9 @@ class _CardGameWidgetState extends ConsumerState<CardGameWidget> {
   void initState() {
     super.initState();
     //RESGATAR CORES E DATAS DA MODALIDADE DA PARTIDA
-    modalityColor = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality!.name)['color'];
-    modalityTextColor = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality!.name)['textColor'];
-    modalityImage = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality!.name)['image'];
+    modalityColor = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality?.name ?? 'Football')['color'];
+    modalityTextColor = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality?.name ?? 'Football')['textColor'];
+    modalityImage = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality?.name ?? 'Football')['image'];
     //RESGATAR PROP DE NAVEGAÇÃO PADRÃO
     propNavigate = widget.navigate != null ? widget.navigate! : false;
     //RESGATAR PROP DE ATIVAÇÃO PADRÃO DO CARD

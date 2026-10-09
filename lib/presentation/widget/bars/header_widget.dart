@@ -41,9 +41,10 @@ class HeaderWidget extends StatelessWidget implements PreferredSizeWidget{
   Widget build(BuildContext context) {
 
     return AppBar(
-      backgroundColor: brightness 
-        ? Colors.transparent 
+      backgroundColor: brightness
+        ? Colors.transparent
         : ( backgroundColor ?? Theme.of(context).primaryColor),
+      surfaceTintColor: Colors.transparent,
       title: title != null 
         ? Text(
           title!,

@@ -34,7 +34,7 @@ class CardEventSearchWidget extends ConsumerWidget {
       onTap: () {
         //DEFINIR EVENTO ATUAL NO PROVIDER E NAVEGAR
         ref.read(eventSessionProvider.notifier).setEvent(event);
-        context.go('/event/view');
+        context.push('/event/view');
       },
       child: Card(
         child: Padding(

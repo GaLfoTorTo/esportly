@@ -16,7 +16,7 @@ class ImgHelper {
     if(event != null){
       final imgProvider = event?.photo != null
         ? CachedNetworkImageProvider(event!.photo!)
-        : AssetImage(ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality!.name)['image']) as ImageProvider;
+        : AssetImage(ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality?.name ?? 'Football')['image']) as ImageProvider;
         return imgProvider;
     }
     return const AssetImage(AppImages.cardFootball) as ImageProvider;

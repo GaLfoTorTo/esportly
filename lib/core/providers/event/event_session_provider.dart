@@ -123,28 +123,32 @@ class EventSessionNotifier extends Notifier<EventSessionState> {
     state = state.copyWith(loading: true);
     try {
       final newEvent = await _eventRepository.getEvent(event.uuid!);
-      final styleMap = ModalityHelper.getEventModalityColor(newEvent!.gameConfig?.category ?? newEvent.modality!.name);
+      if (newEvent == null) return;
+      final styleMap = ModalityHelper.getEventModalityColor(newEvent.gameConfig?.category ?? newEvent.modality?.name ?? 'Football');
       final img = ImgHelper.getEventImg(newEvent);
       final isDark = await AppHelper.isImageDark(img);
       state = state.copyWith(
         event: newEvent,
-        participant: event.participants?.where((p) => p.id == state.user!.id).firstOrNull != null,
-        privacy: event.privacy!.name,
+        participant: event.participants?.where((p) => p.id == state.user?.id).firstOrNull != null,
+        privacy: event.privacy?.name ?? 'Public',
         modalityColor: styleMap['color'],
         modalityTextColor: styleMap['textColor'],
         modalityImage: img,
         heroBrightness: isDark,
         heroTextColor: isDark ? AppColors.blue_500 : AppColors.white,
       );
-      //INICIALIZAR PROVIDERS SECUNDARIOS DE EVENTO
-      ref.read(eventOverviewProvider.notifier).init(event);
-      ref.read(eventParticipantsProvider.notifier).init(event);
-      ref.read(eventRankProvider.notifier).init(event);
-      ref.read(eventRulesProvider.notifier).init(event);
-      ref.read(eventNewsProvider.notifier).init(event);
-      //INICIALIZAR PROVIDER DE PARTIDAS
-      if(state.participant) ref.read(gameSessionProvider.notifier).init(event);
+      if(state.privacy == 'Public'){
+        //INICIALIZAR PROVIDERS SECUNDARIOS DE EVENTO
+        ref.read(eventOverviewProvider.notifier).init(event);
+        ref.read(eventParticipantsProvider.notifier).init(event);
+        ref.read(eventRankProvider.notifier).init(event);
+        ref.read(eventRulesProvider.notifier).init(event);
+        ref.read(eventNewsProvider.notifier).init(event);
+        //INICIALIZAR PROVIDER DE PARTIDAS - SOMENTE PARA EVENTOS PÚBLICOS
+        ref.read(gameSessionProvider.notifier).init(event);
+      }
     } catch (e) {
+      print(e);
       state = state.copyWith(error: true);
       final ctx = sl<GoRouter>().routerDelegate.navigatorKey.currentContext;
       if (ctx != null) AppHelper.feedbackMessage(ctx, AppHelper.extractErrorMessage(e));

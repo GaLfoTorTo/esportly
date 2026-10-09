@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_votes.dart';
+import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -11,26 +13,32 @@ import 'package:esportly/core/helpers/user_helper.dart';
 import 'package:esportly/data/models/team_model.dart';
 import 'package:esportly/data/models/user_model.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
-import 'package:esportly/core/providers/game/game_match_provider.dart';
 import 'package:esportly/core/providers/game/game_votes_provider.dart';
-import 'package:esportly/presentation/widget/buttons/button_vote_widget.dart';
+import 'package:esportly/presentation/widget/charts/chart_pie_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_player_game_widget.dart';
 
 class GameOverviewPage extends ConsumerWidget {
   const GameOverviewPage({super.key});
 
-  String _getOption(String key, double team1Value, double team2Value) {
-    if (key == 'team1') return team1Value > team2Value ? "Win" : "Lose";
-    if (key == 'team2') return team2Value > team1Value ? "Win" : "Lose";
-    return "Draw";
+  Widget _legendItem(BuildContext context, Color color, String label) {
+    return Row(
+      spacing: 4,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        Text(label, style: Theme.of(context).textTheme.labelSmall),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dimensions = MediaQuery.of(context).size;
     final session = ref.watch(gameSessionProvider);
-    final match = ref.watch(gameMatchProvider);
-    final votes = ref.watch(gameVotesProvider);
+    final votesSession = ref.watch(gameVotesProvider);
 
     if (session.event == null || session.currentGame == null) {
       return const SkeletonGameOverviewWidget();
@@ -65,8 +73,9 @@ class GameOverviewPage extends ConsumerWidget {
 
     final TeamModel teamA = teams.first;
     final TeamModel teamB = teams.last;
-    final double team1Value = votes.votesGame['team1'] ?? 0.0;
-    final double team2Value = votes.votesGame['team2'] ?? 0.0;
+    final double team1Value = votesSession.gamePercent('team1');
+    final double drawValue  = votesSession.gamePercent('draw');
+    final double team2Value = votesSession.gamePercent('team2');
 
     final List<Map<String, dynamic>> infoGame = EventHelper.getDetailGame(event);
 
@@ -96,10 +105,12 @@ class GameOverviewPage extends ConsumerWidget {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 15,
+              spacing: 20,
               children: [
-                Text("Detalhes da Partida",
-                    style: Theme.of(context).textTheme.titleSmall),
+                Text(
+                  "Detalhes da Partida",
+                  style: Theme.of(context).textTheme.titleSmall
+                ),
                 Stack(
                   alignment: Alignment.topCenter,
                   children: [
@@ -245,93 +256,115 @@ class GameOverviewPage extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("Quem Vencerá a Partida ?",
-                        style: Theme.of(context).textTheme.titleSmall),
                     Text(
-                      "Total de Votos: ${votes.votesGameCount}",
+                      "Quem Vencerá a Partida ?",
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    Text(
+                      "${votesSession.votesGameCount} votos",
                       style: Theme.of(context).textTheme.labelSmall,
                     ),
                   ],
                 ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: votes.votesGame.entries.map((item) {
-                    final String option =
-                        _getOption(item.key, team1Value, team2Value);
-                    final double value = item.value;
-                    final String team = item.key == 'team1'
-                        ? teamA.name!
-                        : item.key == 'team2'
-                            ? teamB.name!
-                            : "Empate";
-                    final String status = option == "Win"
-                        ? "Vitória"
-                        : option == "Lose"
-                            ? "Derrota"
-                            : "Empate";
-                    final Color statusColor = option == "Win"
-                        ? modalityColor
-                        : option == "Lose"
-                            ? AppColors.red_300
-                            : AppColors.grey_300;
-                    return Column(
-                      spacing: 10,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
+                      spacing: 4,
                       children: [
                         Text(
-                          team,
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelMedium!
-                              .copyWith(color: statusColor),
-                        ),
-                        ButtonVoteWidget(
-                          option: option,
-                          value: value,
-                          action: () {},
+                          teamA.name!,
+                          style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                            color: AppColors.green_300
+                          ),
                         ),
                         Text(
-                          "$status ${value.toStringAsFixed(0)}%",
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelMedium!
-                              .copyWith(color: statusColor),
+                          "${team1Value.toStringAsFixed(0)}%",
+                          style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                            color: AppColors.green_300
+                          ),
                         ),
                       ],
-                    );
-                  }).toList(),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Quem será o MVP ?",
-                        style: Theme.of(context).textTheme.titleSmall),
-                    Text(
-                      "Total de Votos: ${votes.votesMVPCount}",
-                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                    ChartPieWidget(
+                      team1Value: team1Value,
+                      drawValue: drawValue,
+                      team2Value: team2Value,
+                      team1Color: AppColors.green_300,
+                      team2Color: AppColors.red_300,
+                    ),
+                    Column(
+                      spacing: 4,
+                      children: [
+                        Text(
+                          teamB.name!,
+                          style: Theme.of(context).textTheme.labelMedium!
+                              .copyWith(color: AppColors.red_300),
+                        ),
+                        Text(
+                          "${team2Value.toStringAsFixed(0)}%",
+                          style: Theme.of(context).textTheme.titleSmall!
+                              .copyWith(color: AppColors.red_300),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: votes.votesMVP.entries.take(3).map((item) {
-                      UserModel user =
-                          teamA.players.firstWhere((u) => u.uuid == item.key);
-                      int value = item.value;
-                      return Column(
-                        spacing: 10,
-                        children: [
-                          CardPlayerGameWidget(user: user),
-                          Text(
-                            "${value.toStringAsFixed(0)} votos",
-                            style: Theme.of(context).textTheme.labelMedium,
-                          ),
-                        ],
-                      );
-                    }).toList(),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  spacing: 16,
+                  children: [
+                    _legendItem(context, AppColors.grey_300, "Empate  ${drawValue.toStringAsFixed(0)}%"),
+                  ],
                 ),
+                if(teamA.players.isNotEmpty && teamB.players.isNotEmpty)...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Quem será o MVP ?",
+                          style: Theme.of(context).textTheme.titleSmall),
+                      Text(
+                        "Total de Votos: ${votesSession.votesMVPCount}",
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                    ],
+                  ),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: votesSession.votesMVP.entries.take(3).map((item) {
+                        UserModel user = teamA.players.firstWhere((u) => u.uuid == item.key);
+                        int value = item.value;
+                        return Column(
+                          spacing: 10,
+                          children: [
+                            CardPlayerGameWidget(user: user),
+                            Text(
+                              "${value.toStringAsFixed(0)} votos",
+                              style: Theme.of(context).textTheme.labelMedium,
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  if(!votesSession.votedGame && !votesSession.votedMVP)...[
+                    ButtonTextWidget(
+                      backgroundColor: modalityColor,
+                      text: "Votar",
+                      icon: Icons.how_to_vote_rounded,
+                      width: dimensions.width,
+                      action: () => showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
+                          builder: (_) => const BottomSheetVotes(),
+                        ),
+                    ),
+                  ]
+                ],
               ],
             ),
           ),

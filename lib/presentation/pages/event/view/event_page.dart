@@ -69,8 +69,9 @@ class _EventPageState extends ConsumerState<EventPage> with SingleTickerProvider
     //RESGATAR DIMENSÕES DO DISPOSITIVO
     var dimensions = MediaQuery.of(context).size;
     final eventSession = ref.watch(eventSessionProvider);
-    final inProgressNotEmpty = ref.watch(gameScheduleProvider.select((s) => s.inProgressGames.isNotEmpty));
-    final hasGames = ref.watch(gameScheduleProvider.select((s) => s.hasGames));
+    final isPublic = eventSession.privacy == 'Public';
+    final inProgressNotEmpty = isPublic && ref.watch(gameScheduleProvider.select((s) => s.inProgressGames.isNotEmpty));
+    final hasGames = isPublic && ref.watch(gameScheduleProvider.select((s) => s.hasGames));
 
     //LISTA DE TABS
     List<String> tabs = [
@@ -86,7 +87,7 @@ class _EventPageState extends ConsumerState<EventPage> with SingleTickerProvider
       appBar: setHeaderBar(eventSession),
       extendBodyBehindAppBar: tabController.index == 0,
       body: Builder(builder: (_) {
-        if (eventSession.loading) {
+        if (eventSession.loading || eventSession.event == null) {
           return SizedBox(
             width: dimensions.width,
             height: dimensions.height,

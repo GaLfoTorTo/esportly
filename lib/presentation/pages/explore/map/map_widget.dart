@@ -56,7 +56,6 @@ class _MapWidgetState extends State<MapWidget> {
         ]else...[
           TileLayer(
             urlTemplate: ApiRoutes.mapUrl(Theme.of(context).brightness),
-            subdomains: const ['a', 'b', 'c', 'd'],
           ),
           //POSIÇÃO ATUAL DO USUARIO
           const UserMarkerWidget(),

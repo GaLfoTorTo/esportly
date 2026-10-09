@@ -441,11 +441,10 @@ class BottomSheetEventExplore extends ConsumerWidget {
                         width: dimensions.width,
                         height: 30,
                         text: "Ver Pelada",
-                        action: () => {
-                          //DEFINIR EVENTO ATUAL NO CONTROLLER
-                          ref.read(eventSessionProvider.notifier).setEvent(event),
-                          //NAVEGAR PARA PAGINA DO EVENTO
-                          context.go('/event/view')
+                        action: () {
+                          ref.read(eventSessionProvider.notifier).setEvent(event);
+                          Navigator.of(context).pop();
+                          context.push('/event/view');
                         },
                       )
                     ],

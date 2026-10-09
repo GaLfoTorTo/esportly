@@ -20,7 +20,7 @@ class CardEscalationEventWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dimensions = MediaQuery.of(context).size;
-    final String modalityImage = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality!.name)['image'];
+    final String modalityImage = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality?.name ?? 'Football')['image'];
 
     final participants = event.participants ?? [];
     final managers = participants.where((u) => u.manager != null).toList();

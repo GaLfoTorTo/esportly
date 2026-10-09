@@ -27,9 +27,9 @@ class CardDayEventWidget extends ConsumerWidget {
     //VERIFICAR SE HÁ PARTIDAS EM ANDAMENTO PARA ESTE EVENTO
     final inProgressGames = ref.watch(gameScheduleProvider.select((s) => s.inProgressGames));
     //ESTADO - ITEMS EVENTO
-    Color modalityColor = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality!.name)['color'];
-    Color modalityTextColor = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality!.name)['textColor'];
-    String modalityImage = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality!.name)['image'];
+    Color modalityColor = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality?.name ?? 'Football')['color'];
+    Color modalityTextColor = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality?.name ?? 'Football')['textColor'];
+    String modalityImage = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality?.name ?? 'Football')['image'];
     //RESGATAR DATA DO EVENTO
     final now = DateTime.now();
     final day = now.day.toString();
