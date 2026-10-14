@@ -1,3 +1,4 @@
+import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/data/models/user_model.dart';
 import 'package:esportly/presentation/widget/cards/card_player_present_widget.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:esportly/data/models/team_model.dart';
 import 'package:esportly/core/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
+import 'package:esportly/core/providers/game/game_match_provider.dart';
 import 'package:esportly/core/providers/game/game_votes_provider.dart';
 import 'package:esportly/presentation/widget/buttons/button_icon_widget.dart';
 
@@ -20,21 +22,22 @@ class BottomSheetVotes extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     //RESGATAR DIMENSÕES DO DISPOSITIVO
     var dimensions = MediaQuery.of(context).size;
-    final votesState    = ref.watch(gameVotesProvider);
+    final eventSession    = ref.watch(eventSessionProvider);
+    final votesSession    = ref.watch(gameVotesProvider);
     final votesNotifier = ref.read(gameVotesProvider.notifier);
     final gameSession = ref.watch(gameSessionProvider);
-    final teams = gameSession.currentGame!.teams;
+    final matchSession = ref.watch(gameMatchProvider);
 
-    final TeamModel teamA = teams!.first;
-    final TeamModel teamB = teams.last;
+    final TeamModel teamA = matchSession.teamA;
+    final TeamModel teamB = matchSession.teamB;
 
     final List<Map<String, dynamic>> resultOpt = [
-      {'label': teamA.name!, 'icon': Icons.shield,   'color': AppColors.green_300},
-      {'label': 'Empate',    'icon': Icons.handshake,'color': AppColors.grey_300}, 
-      {'label': teamB.name!, 'icon': Icons.shield,   'color': AppColors.red_300}
+      {'key': 'team1', 'label': teamA.name ?? 'Time A', 'icon': Icons.shield,   'color': AppColors.green_300},
+      {'key': 'draw',  'label': 'Empate',               'icon': Icons.handshake,'color': AppColors.grey_300},
+      {'key': 'team2', 'label': teamB.name ?? 'Time B', 'icon': Icons.shield,   'color': AppColors.red_300}
     ];
 
-    final players = List.from([teamA.players, teamB.players]);
+    final players = [...teamA.players, ...teamB.players];
 
     return Container(
       height: dimensions.height,
@@ -58,12 +61,18 @@ class BottomSheetVotes extends ConsumerWidget {
                   spacing: 10,
                   children: [
                     ButtonIconWidget(
-                      icon: item['icon'], 
+                      icon: item['icon'],
                       iconSize: 80,
                       padding: 20,
                       iconColor: item['color'],
-                      backgroundColor: item['color']!.withAlpha(votesState.selectedGame == item['label'] ? 50 : 10),
-                      action: () => votesNotifier.setGameVote(item['label'])
+                      backgroundColor: item['color']!.withAlpha(votesSession.selectedGame == item['key'] ? 180 : 10),
+                      action: (){
+                        votesNotifier.setGameVote(item['key']);
+                        final voteSession = ref.read(gameVotesProvider);
+                        if(voteSession.votedGame && voteSession.votedMVP){
+                          Navigator.of(context).pop();
+                        }
+                      }
                     ),
                     Text(
                       item['label'],
@@ -81,12 +90,25 @@ class BottomSheetVotes extends ConsumerWidget {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             ListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               children: players.map((item){
                 UserModel user = item;
-                return CardPlayerPresentWidget(
-                  user: user,
-                  modality: gameSession.event!.modality!.name,
-                  present: true
+                return InkWell(
+                  onTap: (){
+                    votesNotifier.setMVPVote(user.uuid!);
+                    final voteSession = ref.read(gameVotesProvider);
+                    if(voteSession.votedGame && voteSession.votedMVP){
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: CardPlayerPresentWidget(
+                    user: user,
+                    modality: gameSession.event!.modality!.name,
+                    present: true,
+                    active: user.uuid == votesSession.selectedMVP,
+                    color: eventSession.modalityColor.withAlpha(100)
+                  ),
                 );
               }).toList(),
             )

@@ -48,7 +48,7 @@ class _BottomSheetGamePlayersState extends ConsumerState<BottomSheetGamePlayers>
             selectedPlayers.add(participant);
             participants.remove(participant);
           });
-          ref.read(gameMatchProvider.notifier).setTeamPlayers(widget.team, List.from(selectedPlayers));
+          ref.read(gameMatchProvider.notifier).setPlayersTeam(widget.team, List.from(selectedPlayers));
         }
       } else {
         Navigator.of(context).pop();
@@ -60,7 +60,7 @@ class _BottomSheetGamePlayersState extends ConsumerState<BottomSheetGamePlayers>
           selectedPlayers.remove(participant);
           participants.insert(0, participant);
         });
-        ref.read(gameMatchProvider.notifier).setTeamPlayers(widget.team, List.from(selectedPlayers));
+        ref.read(gameMatchProvider.notifier).setPlayersTeam(widget.team, List.from(selectedPlayers));
       }
     }
   }

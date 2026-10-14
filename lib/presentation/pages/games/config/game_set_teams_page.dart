@@ -1,13 +1,14 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/data/models/user_model.dart';
-import 'package:esportly/core/helpers/user_helper.dart';
 import 'package:esportly/core/theme/app_colors.dart';
 import 'package:esportly/core/theme/app_icones.dart';
 import 'package:esportly/core/helpers/app_helper.dart';
+import 'package:esportly/core/helpers/user_helper.dart';
 import 'package:esportly/core/helpers/loading_overlay.dart';
+import 'package:esportly/core/providers/game/game_config_provider.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
 import 'package:esportly/core/providers/game/game_match_provider.dart';
 import 'package:esportly/core/providers/game/game_day_provider.dart';
@@ -15,7 +16,6 @@ import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/widget/bars/header_widget.dart';
 import 'package:esportly/presentation/widget/images/img_circle_widget.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
-import 'package:esportly/presentation/widget/buttons/float_button_widget.dart';
 import 'package:esportly/presentation/widget/buttons/button_outline_widget.dart';
 import 'package:esportly/presentation/widget/dialogs/dialog_alert_team.dart';
 import 'package:esportly/presentation/widget/dialogs/dialog_random_team.dart';
@@ -36,18 +36,16 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
   List<UserModel> participantsPresentClone = [];
   bool teamDefined = false;
   bool reorderList = false;
-  late int qtdPlayers;
 
   @override
   void initState() {
     super.initState();
-    final gameSession = ref.read(gameSessionProvider);
-
-    qtdPlayers = gameSession.config?.playersPerTeam ?? 0;
+    final qtdPlayers = ref.read(gameConfigProvider).config?.playersPerTeam ?? 0;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final participantsPresent = ref.read(gameDayProvider).participantsPresent;
-      if (participantsPresent.length < qtdPlayers * 2) {
+      final ready = ref.read(gameSessionProvider).ready;
+      if (!ready && participantsPresent.length < qtdPlayers * 2) {
         showDialog(context: context, builder: (_) => const DialogAlertTeam());
       } else {
         final m = ref.read(gameMatchProvider);
@@ -61,13 +59,14 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
   //FUNÇÃO DE ADIÇÃO DE JOGADORES A EQUIPE
   Future<void> setPlayersToTeam(bool randomize) async {
     await Future.delayed(const Duration(seconds: 2));
+    final qtdPlayers = ref.read(gameConfigProvider).config?.playersPerTeam ?? 0;
     final presents = ref.read(gameDayProvider).participantsPresent;
     var players = presents.take(qtdPlayers * 2).toList();
     final remaining = presents.skip(qtdPlayers * 2).toList();
     if (randomize) players = [...players]..shuffle(Random());
     ref.read(gameDayProvider.notifier).setParticipantsPresent(remaining);
-    ref.read(gameMatchProvider.notifier).setTeamPlayers(0, players.take(qtdPlayers).toList());
-    ref.read(gameMatchProvider.notifier).setTeamPlayers(1, players.skip(qtdPlayers).take(qtdPlayers).toList());
+    ref.read(gameMatchProvider.notifier).setPlayersTeam(0, players.take(qtdPlayers).toList());
+    ref.read(gameMatchProvider.notifier).setPlayersTeam(1, players.skip(qtdPlayers).take(qtdPlayers).toList());
   }
 
   //FUNÇÃO DE RESET DE EQUIPES
@@ -77,16 +76,27 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
     final current = ref.read(gameDayProvider).participantsPresent;
     final allPresent = [...current, ...matchSession.teamA.players, ...matchSession.teamB.players];
     ref.read(gameDayProvider.notifier).setParticipantsPresent(allPresent);
-    ref.read(gameMatchProvider.notifier).setTeamPlayers(0, []);
-    ref.read(gameMatchProvider.notifier).setTeamPlayers(1, []);
+    ref.read(gameMatchProvider.notifier).setPlayersTeam(0, []);
+    ref.read(gameMatchProvider.notifier).setPlayersTeam(1, []);
   }
 
   //FUNÇÃO DE DEFINIÇÃO DE EQUIPES
   Future<void> setTeams() async{
     await Future.delayed(const Duration(seconds: 2));
+    final qtdPlayers = ref.read(gameConfigProvider).config?.playersPerTeam;
     final matchSession = ref.read(gameMatchProvider);
     if (matchSession.teamA.players.length == qtdPlayers && matchSession.teamB.players.length == qtdPlayers) {
-      ref.read(gameMatchProvider.notifier).setIsGameReady(true);
+      final currentGame = ref.read(gameSessionProvider).currentGame;
+      if (currentGame != null) {
+        final existingTeams = currentGame.teams;
+        final teamA = existingTeams != null && existingTeams.length >= 1
+            ? existingTeams[0].copyWith(players: matchSession.teamA.players)
+            : matchSession.teamA;
+        final teamB = existingTeams != null && existingTeams.length >= 2
+            ? existingTeams[1].copyWith(players: matchSession.teamB.players)
+            : matchSession.teamB;
+        ref.read(gameSessionProvider.notifier).setGame(currentGame.copyWith(teams: [teamA, teamB]), true);
+      }
       context.pop();
     } else {
       AppHelper.feedbackMessage(context, "Os times não tem jogadores suficientes para continuar");
@@ -120,6 +130,7 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
     final gameSession = ref.read(gameSessionProvider);
     final matchSession = ref.watch(gameMatchProvider);
     final daySession = ref.watch(gameDayProvider);
+    final qtdPlayers = ref.watch(gameConfigProvider).config?.playersPerTeam ?? 0;
     //ESTADOS
     final event = gameSession.event!;
     final modality = event.modality?.name ?? '';
@@ -247,7 +258,7 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
                                   String name = "Jogador";
                                   String userName = "jogador";
                                   dynamic photo;
-                                  if (item < teamLength) {
+                                  if (item < teamPlayers.length) {
                                     final user = teamPlayers[item];
                                     name = UserHelper.getFullName(user);
                                     userName = user.userName!;
@@ -301,7 +312,16 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
                         width: dimensions.width,
                         backgroundColor: modalityColor,
                         height: 30,
-                        action: () => setTeams(),
+                        action: () async {
+                          await LoadingOverlay.show(
+                            context,
+                            () async {
+                              await setTeams();
+                            },
+                            loadingWidget: const Center(child: IndicatorLoadingWidget()),
+                            barrierColor: AppColors.dark_700.withAlpha(179),
+                          );
+                        },
                       ),
                       ButtonOutlineWidget(
                         text: "Resetar",
@@ -319,6 +339,27 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
                             barrierColor: AppColors.dark_700.withAlpha(179),
                           );
                         },
+                      ),
+                    ]else...[
+                      ButtonTextWidget(
+                        text: "Selecionar Equipes",
+                        icon: Icons.people,
+                        width: dimensions.width,
+                        backgroundColor: modalityColor,
+                        height: 40,
+                        action: () => showDialog(
+                          context: context,
+                          builder: (_) => DialogRandomTeam(
+                            actionRandom: () async {
+                              await setPlayersToTeam(true);
+                              setState(() { teamDefined = true; });
+                            },
+                            actionOrder: () async {
+                              await setPlayersToTeam(false);
+                              setState(() { teamDefined = true; });
+                            },
+                          ),
+                        ),
                       ),
                     ],
                     const Divider(),
@@ -463,29 +504,6 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
           ),
         ),
       ),
-      floatingActionButton: Builder(builder: (_) {
-        if (!teamDefined && participantsPresent.length >= qtdPlayers * 2) {
-          return FloatButtonWidget(
-            floatKey: "escalation_game",
-            icon: Icons.content_paste_go_rounded,
-            backgroundColor: modalityColor,
-            onPressed: () => showDialog(
-              context: context,
-              builder: (_) => DialogRandomTeam(
-                actionRandom: () async {
-                  await setPlayersToTeam(true);
-                  setState(() { teamDefined = true; });
-                },
-                actionOrder: () async {
-                  await setPlayersToTeam(false);
-                  setState(() { teamDefined = true; });
-                },
-              ),
-            ),
-          );
-        }
-        return const SizedBox.shrink();
-      }),
     );
   }
 }

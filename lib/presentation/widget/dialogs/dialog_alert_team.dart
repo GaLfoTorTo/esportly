@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 
-class DialogAlertTeam extends StatelessWidget {
+class DialogAlertTeam extends ConsumerWidget {
   const DialogAlertTeam({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     //RESGATAR DIMENSÕES DO DISPOSITIVO
     var dimensions = MediaQuery.of(context).size;
+    final modalityColor = ref.read(eventSessionProvider).modalityColor;
 
 
     return  Dialog(
@@ -42,6 +45,7 @@ class DialogAlertTeam extends StatelessWidget {
             ButtonTextWidget(
               text: "Entendi",
               width: dimensions.width,
+              backgroundColor: modalityColor,
               action: () => Navigator.of(context).pop(),
             ),
           ],

@@ -1,12 +1,12 @@
-import 'package:esportly/core/providers/game/game_day_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/theme/app_icones.dart';
 import 'package:esportly/core/theme/app_colors.dart';
-import 'package:esportly/core/providers/event/event_session_provider.dart';
+import 'package:esportly/core/providers/game/game_day_provider.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
-import 'package:esportly/core/providers/game/game_match_provider.dart';
+import 'package:esportly/core/providers/game/game_stream_provider.dart';
+import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/pages/games/detail/game_escalation_page.dart';
 import 'package:esportly/presentation/pages/games/detail/game_overview_page.dart';
 import 'package:esportly/presentation/pages/games/detail/game_statistics_page.dart';
@@ -35,9 +35,9 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
     tabController = TabController(length: 4, vsync: this);
     scrollController.addListener(handleScroll);
     //INICIAR PARTICIPANTES
-    ref.read(gameDayProvider.notifier).init();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!ref.read(gameMatchProvider).isGameReady) {
+      ref.read(gameDayProvider.notifier).init();
+      if (!ref.read(gameSessionProvider).ready) {
         showDialog(context: context, builder: (_) => const DialogAlertStart());
       }
     });
@@ -60,12 +60,11 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
   Widget build(BuildContext context) {
     final dimensions = MediaQuery.of(context).size;
     final eventSession = ref.watch(eventSessionProvider);
-    final session = ref.watch(gameSessionProvider);
-    final match = ref.watch(gameMatchProvider);
-    final event = session.event!;
+    final gameSession = ref.watch(gameSessionProvider);
+    final liveSession = ref.watch(gameStreamProvider);
+    final event = gameSession.event!;
     final modalityColor = eventSession.modalityColor;
     final modalityTextColor = eventSession.modalityTextColor;
-    final modalityImage = eventSession.modalityImage;
 
     const List<String> tabs = ['Resumo', 'Escalações', 'Estatísticas', 'Timeline'];
 
@@ -75,7 +74,7 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             HeaderScrollWidget(
-              title: "Partida #${session.currentGame?.number}",
+              title: "Partida #${gameSession.currentGame?.number}",
               backgroundColor: modalityColor,
               leftAction: () => context.pop(),
               rightIcon: AppIcones.cog_solid,
@@ -83,10 +82,10 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
             ),
             SliverList(
               delegate: SliverChildListDelegate([
-                if (session.currentGame != null)
+                if (gameSession.currentGame != null)
                   CardGameDetailWidget(
                     event: event,
-                    game: session.currentGame!,
+                    game: gameSession.currentGame!,
                   ),
               ]),
             ),
@@ -138,7 +137,7 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
           ],
         ),
       ),
-      floatingActionButton: match.isGameReady && tabIndex == 0
+      floatingActionButton: liveSession.live && tabIndex == 0
           ? FloatButtonWidget(
               floatKey: "control_games",
               icon: Icons.play_arrow,
@@ -146,15 +145,7 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
               color: modalityTextColor,
               onPressed: () {},
             )
-          : !match.isGameReady
-              ? FloatButtonWidget(
-                  floatKey: "teams_games",
-                  icon: AppIcones.escalacao_outline,
-                  backgroundColor: modalityColor,
-                  color: modalityTextColor,
-                  onPressed: () => context.push("/games/teams"),
-                )
-              : const SizedBox.shrink(),
+          : const SizedBox.shrink(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }

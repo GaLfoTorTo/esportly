@@ -9,11 +9,15 @@ import 'package:esportly/presentation/widget/badges/position_widget.dart';
 class CardPlayerPresentWidget extends StatelessWidget {
   final UserModel user;
   final String modality;
+  final bool active;
+  final Color color;
   final bool present;
   const CardPlayerPresentWidget({
     super.key,
     required this.user,
     required this.modality,
+    this.active = false,
+    this.color = AppColors.green_300,
     required this.present
   });
 
@@ -23,6 +27,10 @@ class CardPlayerPresentWidget extends StatelessWidget {
     return Card(
       child: Container(
         padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          border: active ? Border.all(color: color, width: 2) : null,
+          borderRadius: BorderRadius.circular(10)
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -71,11 +79,30 @@ class CardPlayerPresentWidget extends StatelessWidget {
                 ),
               ],
             ),
-            Icon(
-              present ? Icons.check_circle : AppIcones.question_circle_solid,
-              color: present ? AppColors.green_300 : AppColors.yellow_500,
-              size: 30,
-            )
+            if(active)...[
+              Column(
+                spacing: 5,
+                children: [
+                  const Icon(
+                    Icons.emoji_events_rounded,
+                    color:AppColors.yellow_500,
+                    size: 30,
+                  ),
+                  Text(
+                    "MVP",
+                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                      color: AppColors.yellow_500
+                    ),
+                  )
+                ],
+              )
+            ]else...[
+              Icon(
+                present ? Icons.check_circle : AppIcones.question_circle_solid,
+                color: present ? AppColors.green_300 : AppColors.yellow_500,
+                size: 30,
+              )
+            ]
           ],
         ),
       ),

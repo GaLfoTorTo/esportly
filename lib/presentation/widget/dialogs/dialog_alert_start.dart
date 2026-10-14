@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/widget/buttons/button_outline_widget.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 
-class DialogAlertStart extends StatelessWidget {
+class DialogAlertStart extends ConsumerWidget {
   const DialogAlertStart({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     //RESGATAR DIMENSÕES DO DISPOSITIVO
     var dimensions = MediaQuery.of(context).size;
+    final modalityColor = ref.read(eventSessionProvider).modalityColor;
 
     return  Dialog(
       child: Padding(
@@ -40,6 +43,7 @@ class DialogAlertStart extends StatelessWidget {
                   text: "Escalar equipes",
                   width: dimensions.width,
                   icon: Icons.people_rounded,
+                  backgroundColor: modalityColor,
                   action: () {
                     final router = GoRouter.of(context);
                     Navigator.of(context).pop();

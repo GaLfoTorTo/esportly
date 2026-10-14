@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/theme/app_colors.dart';
+import 'package:esportly/core/helpers/modality_helper.dart';
+import 'package:esportly/core/providers/game/game_config_provider.dart';
 import 'package:esportly/core/providers/game/game_match_provider.dart';
 import 'package:esportly/presentation/widget/indicators/stats_game_widget.dart';
 
@@ -11,9 +13,12 @@ class GameStatisticsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dimensions = MediaQuery.of(context).size;
     final match = ref.watch(gameMatchProvider);
+    final config = ref.watch(gameConfigProvider);
 
     final teamA = match.teamA;
     final teamB = match.teamB;
+    final category = config.config?.category;
+    final stats = ModalityHelper.getStatsConfig(category, match);
 
     return SingleChildScrollView(
       child: Container(
@@ -80,40 +85,13 @@ class GameStatisticsPage extends ConsumerWidget {
                 ),
               ],
             ),
-            StatsGameWidget(
-              title: "Posse de Bola",
-              teamAValue: match.teamAPossesion,
-              teamBValue: match.teamBPossesion,
-            ),
-            StatsGameWidget(
-              title: "Chutes",
-              teamAValue: match.teamAShots,
-              teamBValue: match.teamBShots,
-            ),
-            StatsGameWidget(
-              title: "Chutes a Gol",
-              teamAValue: match.teamAShotsGoal,
-              teamBValue: match.teamBShotsGoal,
-            ),
-            StatsGameWidget(
-              title: "Passes",
-              teamAValue: match.teamAPasses,
-              teamBValue: match.teamBPasses,
-            ),
-            StatsGameWidget(
-              title: "Escanteios",
-              teamAValue: match.teamACorners,
-              teamBValue: match.teamBCorners,
-            ),
-            StatsGameWidget(
-              title: "Faltas",
-              teamAValue: match.teamAFouls,
-              teamBValue: match.teamBFouls,
-            ),
-            StatsGameWidget(
-              title: "Defesas",
-              teamAValue: match.teamADefense,
-              teamBValue: match.teamBDefense,
+            ...stats.map(
+              (stat) => StatsGameWidget(
+                title: stat.title,
+                teamAValue: stat.teamAValue,
+                teamBValue: stat.teamBValue,
+                isPercentage: stat.isPercentage,
+              ),
             ),
           ],
         ),

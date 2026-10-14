@@ -15,6 +15,7 @@ class GameStreamState {
   final bool ready;
   final bool error;
   final bool loading;
+  final bool live;
   final EventModel? event;
   final ConnectionState streamState;
   
@@ -22,6 +23,7 @@ class GameStreamState {
     this.ready = false,
     this.error = false,
     this.loading = false,
+    this.live = false,
     this.event,
     this.streamState = ConnectionState.disconnected
   });
@@ -30,12 +32,14 @@ class GameStreamState {
     bool? ready,
     bool? error,
     bool? loading,
+    bool? live,
     EventModel? event,
     ConnectionState? streamState
   }) => GameStreamState(
     ready: ready ?? this.ready,
     error: error ?? this.error,
     loading: loading ?? this.loading,
+    live: live ?? this.live,
     event: event ?? this.event,
     streamState: streamState ?? this.streamState
   );

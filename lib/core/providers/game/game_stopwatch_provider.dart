@@ -58,7 +58,7 @@ class GameStopwatchNotifier extends Notifier<GameStopwatchState> {
 
     _timerService.startStopwatch(game.id!, Duration(minutes: game.duration ?? 10));
 
-    ref.read(gameSessionProvider.notifier).setGame(updatedGame);
+    ref.read(gameSessionProvider.notifier).setGame(updatedGame, false);
     ref.read(gameScheduleProvider.notifier).moveToInProgress(updatedGame);
 
     state = state.copyWith(isGameRunning: true);
@@ -83,7 +83,7 @@ class GameStopwatchNotifier extends Notifier<GameStopwatchState> {
     _cleanup();
 
     final finished = game.copyWith(status: GameStatus.Completed, endTime: DateTime.now());
-    ref.read(gameSessionProvider.notifier).setGame(finished);
+    ref.read(gameSessionProvider.notifier).setGame(finished, false);
     ref.read(gameScheduleProvider.notifier).removeFromInProgress(game);
     ref.read(gameScheduleProvider.notifier).addGameHistoric(finished);
 
@@ -100,7 +100,7 @@ class GameStopwatchNotifier extends Notifier<GameStopwatchState> {
     _cleanup();
 
     final reset = game.copyWith(status: GameStatus.Scheduled);
-    ref.read(gameSessionProvider.notifier).setGame(reset);
+    ref.read(gameSessionProvider.notifier).setGame(reset, false);
     ref.read(gameScheduleProvider.notifier).backToNext(reset);
 
     state = state.copyWith(isGameRunning: false);

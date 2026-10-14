@@ -7,7 +7,7 @@ class GameVotesState {
   final bool votedGame;
   final bool votedMVP; 
   final String? selectedGame;
-  final int? selectedMVP; 
+  final String? selectedMVP; 
 
   const GameVotesState({
     this.votesGame = const {'team1': 0, 'draw': 0, 'team2': 0},
@@ -15,7 +15,7 @@ class GameVotesState {
     this.votedGame = false,
     this.votedMVP  = false,
     this.selectedGame = '',
-    this.selectedMVP  = 0,
+    this.selectedMVP  = '',
   });
 
   //TOTAIS DERIVADOS
@@ -35,7 +35,7 @@ class GameVotesState {
     bool? votedGame,
     bool? votedMVP,
     String? selectedGame,
-    int? selectedMVP,
+    String? selectedMVP,
   }) => GameVotesState(
     votesGame: votesGame   ?? this.votesGame,
     votesMVP:  votesMVP    ?? this.votesMVP,
@@ -52,33 +52,41 @@ class GameVotesNotifier extends Notifier<GameVotesState> {
   GameVotesState build() => const GameVotesState();
 
   //FUNÇÃO DE INICIALIZAÇÃO DE VALORES DE VOTO
-  void initVotes(List<String> participantIds) {
+  void init(List<String> uuids) {
     state = GameVotesState(
       votesGame:   {'team1': 0, 'draw': 0, 'team2': 0},
-      votesMVP:    { for (final id in participantIds) id: 0 },
+      votesMVP:    { for (final id in uuids) id: 0 },
     );
   }
 
-  //FUNÇÃO DE VOTO EM VENCEDOR / PERDEDOR/ EMPATE DA PARTIDA 
-  bool setGameVote(String choice) {
-    if (state.votedGame) return false;
+  //FUNÇÃO DE VOTO EM VENCEDOR / PERDEDOR/ EMPATE DA PARTIDA
+  bool setGameVote(String team) {
+    if (state.selectedGame == team) return false;
     final updated = Map<String, int>.from(state.votesGame);
-    updated[choice] = (updated[choice] ?? 0) + 1;
+    if (state.selectedGame != null && state.selectedGame!.isNotEmpty) {
+      updated[state.selectedGame!] = ((updated[state.selectedGame!] ?? 1) - 1).clamp(0, 999);
+    }
+    updated[team] = (updated[team] ?? 0) + 1;
     state = state.copyWith(
       votesGame: updated,
       votedGame: true,
+      selectedGame: team,
     );
     return true;
   }
 
   //FUNÇÃO DE VOTO NO MELHOR JOGADOR DA PARTIDA
-  bool setMVPVote(String playerId) {
-    if (state.votedMVP) return false;
+  bool setMVPVote(String uuid) {
+    if (state.selectedMVP == uuid) return false;
     final updated = Map<String, int>.from(state.votesMVP);
-    updated[playerId] = (updated[playerId] ?? 0) + 1;
+    if (state.selectedMVP != null && state.selectedMVP!.isNotEmpty) {
+      updated[state.selectedMVP!] = ((updated[state.selectedMVP!] ?? 1) - 1).clamp(0, 999);
+    }
+    updated[uuid] = (updated[uuid] ?? 0) + 1;
     state = state.copyWith(
       votesMVP: updated,
       votedMVP: true,
+      selectedMVP: uuid,
     );
     return true;
   }

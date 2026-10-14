@@ -2,6 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:esportly/core/theme/app_colors.dart';
 import 'package:esportly/core/theme/app_icones.dart';
 import 'package:esportly/core/theme/app_images.dart';
+import 'package:esportly/core/providers/game/game_match_provider.dart';
+
+class StatConfig {
+  final String title;
+  final int teamAValue;
+  final int teamBValue;
+  final bool isPercentage;
+
+  const StatConfig({
+    required this.title,
+    required this.teamAValue,
+    required this.teamBValue,
+    this.isPercentage = false,
+  });
+}
 
 class ModalityHelper {
   //FUNÇÃO DE ESTAMPA DO CAMPO
@@ -201,14 +216,14 @@ class ModalityHelper {
           "qtdPlayers" : 6,
           "minPlayers" :  2,
           "maxPlayers" : 6,
-          "divisions" : 1,
+          "divisions" : 5,
         };
       case "Volei de praia":
         return {
           "qtdPlayers" : 2,
           "minPlayers" :  2,
           "maxPlayers" : 6,
-          "divisions" : 1,
+          "divisions" : 5,
         };
       case "Fut Volei":
         return {
@@ -222,14 +237,14 @@ class ModalityHelper {
           "qtdPlayers" : 5,
           "minPlayers" : 3,
           "maxPlayers" : 5,
-          "divisions" : 1,
+          "divisions" : 4,
         };
       case "Streetball":
         return {
           "qtdPlayers" : 3,
           "minPlayers" : 1,
           "maxPlayers" : 5,
-          "divisions" : 1,
+          "divisions" : 4,
         };
       default:
         return {
@@ -238,6 +253,71 @@ class ModalityHelper {
           "maxPlayers" : 11,
           "divisions" : 2,
         };
+    }
+  }
+
+  //FUNÇÃO PARA RESGATAR ESTATÍSTICAS BASEADAS NA CATEGORIA DA PARTIDA
+  static List<StatConfig> getStatsConfig(String? category, GameMatchState match) {
+    switch (category) {
+      case 'Fut7':
+        return [
+          StatConfig(title: 'Posse de Bola', teamAValue: match.teamAPossesion, teamBValue: match.teamBPossesion, isPercentage: true),
+          StatConfig(title: 'Chutes', teamAValue: match.teamAShots, teamBValue: match.teamBShots),
+          StatConfig(title: 'Chutes a Gol', teamAValue: match.teamAShotsGoal, teamBValue: match.teamBShotsGoal),
+          StatConfig(title: 'Passes', teamAValue: match.teamAPasses, teamBValue: match.teamBPasses),
+          StatConfig(title: 'Escanteios', teamAValue: match.teamACorners, teamBValue: match.teamBCorners),
+          StatConfig(title: 'Faltas', teamAValue: match.teamAFouls, teamBValue: match.teamBFouls),
+          StatConfig(title: 'Defesas', teamAValue: match.teamADefense, teamBValue: match.teamBDefense),
+        ];
+      case 'Futsal':
+        return [
+          StatConfig(title: 'Posse de Bola', teamAValue: match.teamAPossesion, teamBValue: match.teamBPossesion, isPercentage: true),
+          StatConfig(title: 'Chutes', teamAValue: match.teamAShots, teamBValue: match.teamBShots),
+          StatConfig(title: 'Chutes a Gol', teamAValue: match.teamAShotsGoal, teamBValue: match.teamBShotsGoal),
+          StatConfig(title: 'Passes', teamAValue: match.teamAPasses, teamBValue: match.teamBPasses),
+          StatConfig(title: 'Faltas', teamAValue: match.teamAFouls, teamBValue: match.teamBFouls),
+          StatConfig(title: 'Defesas', teamAValue: match.teamADefense, teamBValue: match.teamBDefense),
+        ];
+      case 'Volei':
+      case 'Volei de praia':
+        return [
+          StatConfig(title: 'Ataques', teamAValue: match.teamAShots, teamBValue: match.teamBShots),
+          StatConfig(title: 'Bloqueios', teamAValue: match.teamAShotsGoal, teamBValue: match.teamBShotsGoal),
+          StatConfig(title: 'Aces', teamAValue: match.teamACorners, teamBValue: match.teamBCorners),
+          StatConfig(title: 'Saques', teamAValue: match.teamAPasses, teamBValue: match.teamBPasses),
+          StatConfig(title: 'Defesas', teamAValue: match.teamADefense, teamBValue: match.teamBDefense),
+          StatConfig(title: 'Erros', teamAValue: match.teamAFouls, teamBValue: match.teamBFouls),
+        ];
+      case 'Fut Volei':
+        return [
+          StatConfig(title: 'Ataques', teamAValue: match.teamAShots, teamBValue: match.teamBShots),
+          StatConfig(title: 'Bloqueios', teamAValue: match.teamAShotsGoal, teamBValue: match.teamBShotsGoal),
+          StatConfig(title: 'Saques', teamAValue: match.teamAPasses, teamBValue: match.teamBPasses),
+          StatConfig(title: 'Defesas', teamAValue: match.teamADefense, teamBValue: match.teamBDefense),
+          StatConfig(title: 'Erros', teamAValue: match.teamAFouls, teamBValue: match.teamBFouls),
+        ];
+      case 'Basquete':
+      case 'Streetball':
+        return [
+          StatConfig(title: 'Cestas', teamAValue: match.teamAShots, teamBValue: match.teamBShots),
+          StatConfig(title: 'Arremessos de 3', teamAValue: match.teamAShotsGoal, teamBValue: match.teamBShotsGoal),
+          StatConfig(title: 'Assistências', teamAValue: match.teamAPasses, teamBValue: match.teamBPasses),
+          StatConfig(title: 'Rebotes', teamAValue: match.teamADefense, teamBValue: match.teamBDefense),
+          StatConfig(title: 'Roubadas', teamAValue: match.teamACorners, teamBValue: match.teamBCorners),
+          StatConfig(title: 'Faltas', teamAValue: match.teamAFouls, teamBValue: match.teamBFouls),
+        ];
+      // Futebol é o padrão (também cobre null)
+      default:
+        return [
+          StatConfig(title: 'Posse de Bola', teamAValue: match.teamAPossesion, teamBValue: match.teamBPossesion, isPercentage: true),
+          StatConfig(title: 'Chutes', teamAValue: match.teamAShots, teamBValue: match.teamBShots),
+          StatConfig(title: 'Chutes a Gol', teamAValue: match.teamAShotsGoal, teamBValue: match.teamBShotsGoal),
+          StatConfig(title: 'Passes', teamAValue: match.teamAPasses, teamBValue: match.teamBPasses),
+          StatConfig(title: 'Escanteios', teamAValue: match.teamACorners, teamBValue: match.teamBCorners),
+          StatConfig(title: 'Impedimentos', teamAValue: match.teamAOffside, teamBValue: match.teamBOffside),
+          StatConfig(title: 'Faltas', teamAValue: match.teamAFouls, teamBValue: match.teamBFouls),
+          StatConfig(title: 'Defesas', teamAValue: match.teamADefense, teamBValue: match.teamBDefense),
+        ];
     }
   }
 

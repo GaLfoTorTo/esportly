@@ -137,14 +137,16 @@ class EventSessionNotifier extends Notifier<EventSessionState> {
         heroBrightness: isDark,
         heroTextColor: isDark ? AppColors.blue_500 : AppColors.white,
       );
-      if(state.privacy == 'Public'){
+      final isPublic = state.privacy == 'Public';
+      final isParticipant = state.participant;
+      if(isPublic || isParticipant){
         //INICIALIZAR PROVIDERS SECUNDARIOS DE EVENTO
         ref.read(eventOverviewProvider.notifier).init(event);
         ref.read(eventParticipantsProvider.notifier).init(event);
         ref.read(eventRankProvider.notifier).init(event);
         ref.read(eventRulesProvider.notifier).init(event);
         ref.read(eventNewsProvider.notifier).init(event);
-        //INICIALIZAR PROVIDER DE PARTIDAS - SOMENTE PARA EVENTOS PÚBLICOS
+        //INICIALIZAR PROVIDER DE PARTIDAS - EVENTOS PÚBLICOS OU COM PARTICIPAÇÃO DO USUÁRIO
         ref.read(gameSessionProvider.notifier).init(event);
       }
     } catch (e) {

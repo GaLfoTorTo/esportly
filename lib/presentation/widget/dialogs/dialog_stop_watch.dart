@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/helpers/loading_overlay.dart';
 import 'package:esportly/core/theme/app_colors.dart';
+import 'package:esportly/core/providers/game/game_config_provider.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
 import 'package:esportly/core/providers/game/game_stopwatch_provider.dart';
 import 'package:esportly/presentation/widget/overlays/stopwatch_overlay_widget.dart';
@@ -18,6 +19,7 @@ class _StopWatchDialogState extends ConsumerState<StopWatchDialog> {
   Widget build(BuildContext context) {
     final stopwatch = ref.watch(gameStopwatchProvider);
     final session = ref.read(gameSessionProvider);
+    final gameConfig = ref.read(gameConfigProvider);
 
     void showOverlay(BuildContext ctx, VoidCallback function, String action) {
       Future.delayed(const Duration(milliseconds: 300), () async {
@@ -67,7 +69,7 @@ class _StopWatchDialogState extends ConsumerState<StopWatchDialog> {
     }
 
     Duration getDuration() {
-      final config = session.config;
+      final config = gameConfig.config;
       final game = session.currentGame;
       if (config?.duration != null) return Duration(minutes: config!.duration!);
       if (game?.duration != null) return Duration(minutes: game!.duration!);

@@ -55,12 +55,12 @@ class _CardGameDetailWidgetState extends ConsumerState<CardGameDetailWidget> {
   @override
   Widget build(BuildContext context) {
     var dimensions = MediaQuery.of(context).size;
+    final gameSession = ref.read(gameSessionProvider);
     final currentGame = ref.watch(gameSessionProvider.select((s) => s.currentGame));
-    final teamAScore = ref.watch(gameMatchProvider.select((s) => s.teamAScore));
-    final teamBScore = ref.watch(gameMatchProvider.select((s) => s.teamBScore));
-    final gameEvents = ref.watch(gameMatchProvider.select((s) => s.gameEvents));
+    final teamAScore  = ref.watch(gameMatchProvider.select((s) => s.teamAScore));
+    final teamBScore  = ref.watch(gameMatchProvider.select((s) => s.teamBScore));
+    final gameEvents  = ref.watch(gameMatchProvider.select((s) => s.gameEvents));
     final currentTime = ref.watch(gameStopwatchProvider.select((s) => s.currentTime));
-    final session = ref.read(gameSessionProvider);
 
     final parts = currentTime.split(':');
     final minutes = int.tryParse(parts[0]) ?? 0;
@@ -228,7 +228,7 @@ class _CardGameDetailWidgetState extends ConsumerState<CardGameDetailWidget> {
                 if (teamGameEvents.isEmpty) return Container();
                 final groupedGoals = groupGoalsByPlayer(
                   teamGameEvents.where((e) => e.type?.name == 'Goal').toList(),
-                  session.event ?? widget.event,
+                  gameSession.event ?? widget.event,
                 );
                 return SizedBox(
                   width: dimensions.width * 0.37,
@@ -239,9 +239,9 @@ class _CardGameDetailWidgetState extends ConsumerState<CardGameDetailWidget> {
                       final playerId = entry.key;
                       final goalMinutes = entry.value..sort();
                       final event = teamGameEvents.firstWhere(
-                        (e) => EventHelper.getUserEvent(session.event ?? widget.event, e.userId!)?.id == playerId,
+                        (e) => EventHelper.getUserEvent(gameSession.event ?? widget.event, e.userId!)?.id == playerId,
                       );
-                      final user = EventHelper.getUserEvent(session.event ?? widget.event, event.userId!)!;
+                      final user = EventHelper.getUserEvent(gameSession.event ?? widget.event, event.userId!)!;
                       return Row(
                         spacing: 5,
                         children: [

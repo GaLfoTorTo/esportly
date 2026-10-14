@@ -2,6 +2,7 @@ import 'package:esportly/core/helpers/date_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:esportly/core/theme/app_icones.dart';
 import 'package:esportly/data/models/event_model.dart';
+import 'package:esportly/data/models/game_config_model.dart';
 import 'package:esportly/data/models/user_model.dart';
 
 class EventHelper {
@@ -176,99 +177,134 @@ class EventHelper {
             'value' : event.gameConfig!.duration?.toString() ?? '',
           },
           {
-            'label': "Limite de Gols",
-            'icon': Icons.scoreboard,
-            'value' : event.gameConfig!.config!["point"]?.toString() ?? 'Não',
-          },
-          {
             'label': "2 Tempos",
             'icon': Icons.safety_divider_rounded,
-            'value' : event.gameConfig!.config!["halves"] ? "Sim" : "Não"
+            'value' : event.gameConfig!.config!["hasTwoHalves"] == true ? "Sim" : "Não",
+          },
+          {
+            'label': "Limite de Gols",
+            'icon': Icons.scoreboard,
+            'value' : event.gameConfig!.config!["hasGoalLimit"] == true
+                ? (event.gameConfig!.config!["goalLimit"]?.toString() ?? '--')
+                : 'Não',
           },
           {
             'label': "Pênaltis",
             'icon': Icons.sports_soccer,
-            'value' : event.gameConfig!.config!["penalty"] ? "Sim" : "Não"
+            'value' : event.gameConfig!.config!["hasPenalty"] == true ? "Sim" : "Não",
+          },
+          {
+            'label': "Prorrogação",
+            'icon': Icons.more_time_rounded,
+            'value' : event.gameConfig!.config!["hasExtraTime"] == true
+                ? (event.gameConfig!.config!["extraTime"]?.toString() != null
+                    ? "${event.gameConfig!.config!["extraTime"]} min"
+                    : "Sim")
+                : "Não",
           },
           {
             'label': "Árbitro",
             'icon': Icons.sports,
-            'value' : event.gameConfig!.config!["refereerId"] != null ? "Sim" : "Não"
+            'value' : event.gameConfig!.config!["hasRefereer"] == true ? "Sim" : "Não",
           },
         ];
     }
   }
   
-  //FUNÇÃO DE BUSCA DE INFORMAÇÕES DE PARTIDAS
-  static List<Map<String, dynamic>> getDetailGame(EventModel event){
-    switch (event.modality?.name) {
-      case "Volleyball":
+  //FUNÇÃO DE BUSCA DE INFORMAÇÕES DE PARTIDAS (baseado na config por partida)
+  static List<Map<String, dynamic>> getDetailGame(GameConfigModel config){
+    final cfg = config.config ?? {};
+    final String sportType;
+    switch (config.category) {
+      case 'Volei':
+      case 'Volei de praia':
+      case 'Fut Volei':
+        sportType = 'Volleyball';
+        break;
+      case 'Basquete':
+      case 'Streetball':
+        sportType = 'Basketball';
+        break;
+      default:
+        sportType = 'Football';
+    }
+
+    switch (sportType) {
+      case 'Volleyball':
         return [
           {
             'label': "Sets",
             'icon': Icons.safety_divider_rounded,
-            'value' : event.gameConfig!.duration.toString(),
+            'value': (cfg['sets'] ?? '--').toString(),
           },
           {
-            'label': "Limite de Pontos",
+            'label': "Pontos por Set",
             'icon': Icons.scoreboard,
-            'value' : event.gameConfig!.points != null ? event.gameConfig!.points.toString() : "Não",
+            'value': cfg['hasPointsLimit'] == true
+                ? (cfg['points'] ?? '--').toString()
+                : "Não",
+          },
+          {
+            'label': "Tie-Break",
+            'icon': Icons.add_alarm_rounded,
+            'value': cfg['hasTieBreak'] == true
+                ? (cfg['tieBreakPoints'] != null ? "${cfg['tieBreakPoints']} pts" : "Sim")
+                : "Não",
           },
           {
             'label': "Jogadores por Equipe",
             'icon': Icons.people,
-            'value' : event.gameConfig!.playersPerTeam.toString(),
-          },
-          {
-            'label': "Tie Break",
-            'icon': Icons.add_alarm_rounded,
-            'value' : event.gameConfig!.config!["tieBreakPoints"] != null ? "Sim" : "Não",
+            'value': config.playersPerTeam?.toString() ?? '--',
           },
         ];
-      case "Basketball":
+      case 'Basketball':
         return [
           {
-            'label': "Quarters",
+            'label': "Quartos",
             'icon': Icons.safety_divider_rounded,
-            'value' : event.gameConfig!.config!["quarters"] != null ? event.gameConfig!.config!["quarters"].toString() : "Não",
+            'value': (cfg['quarters'] ?? '--').toString(),
           },
           {
-            'label': "Duração (min)",
+            'label': "Duração/Quarto (min)",
             'icon': AppIcones.stopwatch_solid,
-            'value' : event.gameConfig!.duration.toString(),
+            'value': config.duration?.toString() ?? '--',
           },
           {
             'label': "Limite de Pontos",
             'icon': Icons.scoreboard,
-            'value' : event.gameConfig!.points != null ? event.gameConfig!.points.toString() : "Não",
+            'value': cfg['hasPointsLimit'] == true
+                ? (cfg['points'] ?? '--').toString()
+                : "Não",
           },
           {
             'label': "Jogadores por Equipe",
             'icon': Icons.people,
-            'value' : event.gameConfig!.playersPerTeam.toString(),
+            'value': config.playersPerTeam?.toString() ?? '--',
           },
         ];
-      default:
+      default: // Football
         return [
           {
             'label': "2 Tempos",
             'icon': Icons.safety_divider_rounded,
-            'value' : event.gameConfig!.config!["halves"] != null ? "Sim" : "Não",
+            'value': cfg['hasTwoHalves'] == true ? "Sim" : "Não",
           },
           {
-            'label': "Duração (min)",
+            'label': "Duração/Tempo (min)",
             'icon': AppIcones.stopwatch_solid,
-            'value' : event.gameConfig!.duration.toString(),
+            'value': config.duration?.toString() ?? '--',
           },
           {
             'label': "Limite de Gols",
             'icon': Icons.scoreboard,
-            'value' : event.gameConfig!.points != null ? event.gameConfig!.points.toString() : "Não",
+            'value': cfg['hasGoalLimit'] == true
+                ? (cfg['goalLimit'] ?? '--').toString()
+                : "Não",
           },
           {
             'label': "Jogadores por Equipe",
             'icon': Icons.people,
-            'value' : event.gameConfig!.playersPerTeam.toString(),
+            'value': config.playersPerTeam?.toString() ?? '--',
           },
         ];
     }

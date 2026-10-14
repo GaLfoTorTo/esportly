@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/helpers/loading_overlay.dart';
 import 'package:esportly/core/theme/app_colors.dart';
+import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 import 'package:esportly/presentation/widget/indicators/indicator_loading_widget.dart';
 
-class DialogRandomTeam extends StatelessWidget {
+class DialogRandomTeam extends ConsumerWidget {
   final Future<void> Function() actionRandom;
   final Future<void> Function() actionOrder;
   const DialogRandomTeam({
@@ -14,9 +16,10 @@ class DialogRandomTeam extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     //RESGATAR DIMENSÕES DO DISPOSITIVO
     var dimensions = MediaQuery.of(context).size;
+    final modalityColor = ref.read(eventSessionProvider).modalityColor;
 
     return  Dialog(
       child: Padding(
@@ -53,6 +56,7 @@ class DialogRandomTeam extends StatelessWidget {
                   width: dimensions.width,
                   icon: Icons.repeat_rounded,
                   iconSize: 30,
+                  backgroundColor: modalityColor,
                   action: () async {
                     //EXECUTAR FUNÇÃO RANDOMICA E EXIBIR OVERLAY
                     await LoadingOverlay.show(
@@ -70,6 +74,7 @@ class DialogRandomTeam extends StatelessWidget {
                   width: dimensions.width,
                   icon: Icons.format_list_numbered_rounded,
                   iconSize: 30,
+                  backgroundColor: modalityColor,
                   action: () async {
                     //EXECUTAR FUNÇÃO RANDOMICA E EXIBIR OVERLAY
                     await LoadingOverlay.show(

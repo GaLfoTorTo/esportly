@@ -1,25 +1,28 @@
 import 'dart:math';
-import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_votes.dart';
-import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:esportly/data/models/team_model.dart';
 import 'package:esportly/core/theme/app_colors.dart';
-import 'package:esportly/presentation/widget/skeletons/skeleton_game_overview_widget.dart';
 import 'package:esportly/core/helpers/modality_helper.dart';
+import 'package:esportly/core/providers/game/game_stream_provider.dart';
 import 'package:esportly/core/helpers/event_helper.dart';
 import 'package:esportly/core/helpers/img_helper.dart';
 import 'package:esportly/core/helpers/user_helper.dart';
-import 'package:esportly/data/models/team_model.dart';
-import 'package:esportly/data/models/user_model.dart';
+import 'package:esportly/core/providers/game/game_config_provider.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
 import 'package:esportly/core/providers/game/game_votes_provider.dart';
+import 'package:esportly/core/providers/event/event_session_provider.dart';
+import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_votes.dart';
+import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 import 'package:esportly/presentation/widget/charts/chart_pie_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_player_game_widget.dart';
+import 'package:esportly/presentation/widget/skeletons/skeleton_game_overview_widget.dart';
 
 class GameOverviewPage extends ConsumerWidget {
   const GameOverviewPage({super.key});
 
+  //FUNÇÃO DE LEGENDA DE GRAFICOS
   Widget _legendItem(BuildContext context, Color color, String label) {
     return Row(
       spacing: 4,
@@ -37,47 +40,29 @@ class GameOverviewPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dimensions = MediaQuery.of(context).size;
-    final session = ref.watch(gameSessionProvider);
+    final eventSession = ref.watch(eventSessionProvider);
+    final gameSession = ref.watch(gameSessionProvider);
+    final gameConfig = ref.watch(gameConfigProvider);
     final votesSession = ref.watch(gameVotesProvider);
+    final liveSession = ref.watch(gameStreamProvider);
 
-    if (session.event == null || session.currentGame == null) {
+    //LOADING
+    if (gameSession.event == null || gameSession.currentGame == null) {
       return const SkeletonGameOverviewWidget();
     }
 
-    final event = session.event!;
-    final modalityColor = ModalityHelper.getEventModalityColor(
-      event.gameConfig?.category ?? event.modality!.name,
-    )['color'] as Color;
+    final event = gameSession.event!;
+    final modalityColor = eventSession.modalityColor;
+    final teams = gameSession.currentGame!.teams;
 
-    final teams = session.currentGame!.teams;
-    if (teams == null || teams.length < 2) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          spacing: 12,
-          children: [
-            Icon(Icons.groups, size: 60, color: modalityColor),
-            Text(
-              "Equipes ainda não definidas",
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppColors.grey_500),
-            ),
-            Text(
-              "Configure as equipes para visualizar o resumo da partida.",
-              style: Theme.of(context).textTheme.displayMedium?.copyWith(color: AppColors.grey_500),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
-    }
-
-    final TeamModel teamA = teams.first;
+    final TeamModel teamA = teams!.first;
     final TeamModel teamB = teams.last;
-    final double team1Value = votesSession.gamePercent('team1');
-    final double drawValue  = votesSession.gamePercent('draw');
-    final double team2Value = votesSession.gamePercent('team2');
 
-    final List<Map<String, dynamic>> infoGame = EventHelper.getDetailGame(event);
+    final double team1Value = votesSession.gamePercent('team1');
+    final double team2Value = votesSession.gamePercent('team2');
+    final double drawValue  = votesSession.gamePercent('draw');
+
+    final List<Map<String, dynamic>> infoGame = EventHelper.getDetailGame(gameConfig.config ?? event.gameConfig!);
 
     return SingleChildScrollView(
       child: Column(
@@ -107,6 +92,16 @@ class GameOverviewPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               spacing: 20,
               children: [
+                if(gameSession.ready && !liveSession.live)...[
+                  ButtonTextWidget(
+                    text: "Iniciar Partida",
+                    icon: Icons.play_arrow,
+                    width: dimensions.width,
+                    backgroundColor: modalityColor,
+                    height: 40,
+                    action: () => {},
+                  ),
+                ],
                 Text(
                   "Detalhes da Partida",
                   style: Theme.of(context).textTheme.titleSmall
@@ -139,8 +134,7 @@ class GameOverviewPage extends ConsumerWidget {
                             ],
                           ),
                           child: SvgPicture.asset(
-                            ModalityHelper.getCategoryCourt(
-                                event.gameConfig!.category),
+                            ModalityHelper.getCategoryCourt(event.gameConfig!.category),
                             fit: BoxFit.fill,
                           ),
                         ),
@@ -181,9 +175,9 @@ class GameOverviewPage extends ConsumerWidget {
                                       child: Text(
                                         item['label'],
                                         style: Theme.of(context)
-                                            .textTheme
-                                            .displayMedium!
-                                            .copyWith(color: AppColors.grey_500),
+                                          .textTheme
+                                          .displayMedium!
+                                          .copyWith(color: AppColors.grey_500),
                                         textAlign: TextAlign.center,
                                       ),
                                     ),
@@ -202,7 +196,7 @@ class GameOverviewPage extends ConsumerWidget {
                     }).toList(),
                   ),
                 ),
-                if (session.config?.config!["hasRefereer"] ?? false) ...[
+                if (gameConfig.config?.config?["hasRefereer"] == true) ...[
                   const Divider(),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 30.0),
@@ -216,7 +210,7 @@ class GameOverviewPage extends ConsumerWidget {
                             backgroundImage: ImgHelper.getUserImg(
                               EventHelper.getUserEvent(
                                 event,
-                                session.currentGame!.refereeId!,
+                                gameSession.currentGame!.refereeId!,
                               )?.photo,
                             ),
                           ),
@@ -230,9 +224,9 @@ class GameOverviewPage extends ConsumerWidget {
                                 Text(
                                   "Árbitro",
                                   style: Theme.of(context)
-                                      .textTheme
-                                      .displayMedium!
-                                      .copyWith(color: AppColors.grey_500),
+                                    .textTheme
+                                    .displayMedium!
+                                    .copyWith(color: AppColors.grey_500),
                                 ),
                                 Icon(Icons.sports, size: 20, color: modalityColor),
                               ],
@@ -241,7 +235,7 @@ class GameOverviewPage extends ConsumerWidget {
                               UserHelper.getFullName(
                                 EventHelper.getUserEvent(
                                   event,
-                                  session.currentGame!.refereeId!,
+                                  gameSession.currentGame!.refereeId!,
                                 )!,
                               ),
                               style: Theme.of(context).textTheme.titleSmall,
@@ -334,8 +328,11 @@ class GameOverviewPage extends ConsumerWidget {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: votesSession.votesMVP.entries.take(3).map((item) {
-                        UserModel user = teamA.players.firstWhere((u) => u.uuid == item.key);
+                      children: (votesSession.votesMVP.entries.toList()
+                          ..sort((a, b) => b.value.compareTo(a.value)))
+                          .take(3).map((item) {
+                        final allPlayers = [...teamA.players, ...teamB.players];
+                        final user = allPlayers.firstWhere((u) => u.uuid == item.key);
                         int value = item.value;
                         return Column(
                           spacing: 10,
@@ -350,18 +347,18 @@ class GameOverviewPage extends ConsumerWidget {
                       }).toList(),
                     ),
                   ),
-                  if(!votesSession.votedGame && !votesSession.votedMVP)...[
+                  if(gameSession.ready)...[
                     ButtonTextWidget(
                       backgroundColor: modalityColor,
                       text: "Votar",
                       icon: Icons.how_to_vote_rounded,
                       width: dimensions.width,
                       action: () => showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
-                          builder: (_) => const BottomSheetVotes(),
-                        ),
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
+                        builder: (_) => const BottomSheetVotes(),
+                      ),
                     ),
                   ]
                 ],

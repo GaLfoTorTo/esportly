@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/theme/app_colors.dart';
-import 'package:esportly/core/providers/game/game_session_provider.dart';
+import 'package:esportly/core/providers/game/game_config_provider.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 import 'package:esportly/presentation/widget/others/lineup_widget.dart';
 
@@ -23,7 +23,7 @@ class _BottomSheetEscalationState extends ConsumerState<BottomSheetEscalation> {
   @override
   Widget build(BuildContext context) {
     var dimensions = MediaQuery.of(context).size;
-    final category = ref.watch(gameSessionProvider.select((s) => s.config?.category ?? ''));
+    final category = ref.watch(gameConfigProvider.select((s) => s.config?.category ?? ''));
 
     return Container(
       height: dimensions.height * 0.75,

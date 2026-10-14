@@ -44,6 +44,7 @@ class EventConfigGameStepState extends State<EventConfigGameStep> {
     "Fut7",
     "Futsal",
   ];
+  
   //DEFINIR VARIAVEIS DE CONTROLLE DE SLIDER
   int qtdPlayers = 11;
   int minPlayers = 9;
@@ -88,7 +89,7 @@ class EventConfigGameStepState extends State<EventConfigGameStep> {
     }
   }
 
-  //FUNÇÃO PARA DEFINIR QUANTIDADE DE JOGADOR POR EQUIPE 
+  //FUNÇÃO PARA DEFINIR DE CATEGORIA DE PARTIDA ( JOGADOR POR EQUIPE )
   void setCategory(){
     setState(() {
       //RESGATAR CATEGORIA
@@ -101,11 +102,12 @@ class EventConfigGameStepState extends State<EventConfigGameStep> {
       maxPlayers = mapPlayers['maxPlayers']!;
       divisions = mapPlayers['divisions']!;
       //ATUALIZAR JOGADORES POR EQUIPE
-      setPlayersPerTeam(qtdPlayers);
+      setQtdTeam(qtdPlayers);
     });
   }
 
-  void setPlayersPerTeam(int qtd){
+  //FUNÇÃO DE DEFINIÇÃO DE QUANTIDADE DE JOGADOR POR EQUIPE
+  void setQtdTeam(int qtd){
     //ATUALIZAR JOGADORES POR EQUIPE
     qtdPlayers = qtd;
     eventController.playersPerTeamController.text = qtdPlayers.toString();
@@ -285,7 +287,7 @@ class EventConfigGameStepState extends State<EventConfigGameStep> {
                             onChange: (double value){
                               setState(() {
                                 //ATUALIZAR QUANTIDADE DE JOGADORES
-                                setPlayersPerTeam(value.toInt());
+                                setQtdTeam(value.toInt());
                               });
                             },
                           ),

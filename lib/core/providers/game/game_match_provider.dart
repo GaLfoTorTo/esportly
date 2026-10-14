@@ -7,7 +7,6 @@ import 'package:esportly/data/models/user_model.dart';
 
 //ESTADO - GAME MATCH
 class GameMatchState {
-  final bool isGameReady;
   final TeamModel teamA;
   final TeamModel teamB;
   final List<GameEventModel> gameEvents;
@@ -37,7 +36,6 @@ class GameMatchState {
   final int teamBRedCard;
 
   const GameMatchState({
-    this.isGameReady = false,
     required this.teamA,
     required this.teamB,
     this.gameEvents = const [],
@@ -68,7 +66,6 @@ class GameMatchState {
   });
 
   GameMatchState copyWith({
-    bool? isGameReady,
     TeamModel? teamA,
     TeamModel? teamB,
     List<GameEventModel>? gameEvents,
@@ -85,7 +82,6 @@ class GameMatchState {
     int? teamAYellowCard, int? teamBYellowCard,
     int? teamARedCard, int? teamBRedCard,
   }) => GameMatchState(
-    isGameReady: isGameReady ?? this.isGameReady,
     teamA: teamA ?? this.teamA,
     teamB: teamB ?? this.teamB,
     gameEvents: gameEvents ?? this.gameEvents,
@@ -124,9 +120,6 @@ class GameMatchNotifier extends Notifier<GameMatchState> {
     teamB: TeamModel(players: []),
   );
 
-  //FUNÇÃO DE DEFINIÇÃO DE STATUS DE PARTIDA
-  void setIsGameReady(bool v) => state = state.copyWith(isGameReady: v);
-
   //FUNÇÃO DE DEFINIÇÃO DE EQUIPE PARA PARTIDA
   void setTeamsFromGame(GameModel game) {
     if (game.teams == null || game.teams!.length < 2) return;
@@ -143,6 +136,51 @@ class GameMatchNotifier extends Notifier<GameMatchState> {
   //FUNÇÃO DE ATUALIZAÇÃO DE EQUIPE
   void updateTeams(TeamModel teamA, TeamModel teamB) {
     state = state.copyWith(teamA: teamA, teamB: teamB);
+  }
+
+  //FUNÇÃO DE ATUALIZAÇÃO DE NÚMERO DE JOGADORES POR TIME
+  void setPlayersPerTeam(int playersPerTeam) {
+    final aPlayers = state.teamA.players;
+    final bPlayers = state.teamB.players;
+    final trimmedA = aPlayers.length > playersPerTeam
+        ? state.teamA.copyWith(players: aPlayers.sublist(0, playersPerTeam))
+        : state.teamA;
+    final trimmedB = bPlayers.length > playersPerTeam
+        ? state.teamB.copyWith(players: bPlayers.sublist(0, playersPerTeam))
+        : state.teamB;
+    state = state.copyWith(
+      teamA: trimmedA,
+      teamB: trimmedB,
+      teamAlength: playersPerTeam,
+      teamBlength: playersPerTeam,
+    );
+  }
+
+  //FUNÇÃO DE ATUALIZAÇÃO DE JOGADORES DE UM TIME
+  void setPlayersTeam(int teamIndex, List<UserModel> players) {
+    if (teamIndex == 0) {
+      state = state.copyWith(
+        teamA: state.teamA.copyWith(players: players),
+        teamAlength: players.length,
+      );
+    } else {
+      state = state.copyWith(
+        teamB: state.teamB.copyWith(players: players),
+        teamBlength: players.length,
+      );
+    }
+  }
+
+  //FUNÇÃO DE ADIÇÃO DE EVENTO DA PARTIDA
+  void _addGameEvent(Map<String, dynamic> payload, GameEvent eventType) {
+    try {
+      final gameEvent = GameEventModel.fromMap({
+        ...payload,
+        'type': eventType,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      state = state.copyWith(gameEvents: [gameEvent, ...state.gameEvents]);
+    } catch (_) {}
   }
 
   //FUNÇÃO DE APLICAÇÃO DE AÇÃO - WEBSOCKET
@@ -198,33 +236,6 @@ class GameMatchNotifier extends Notifier<GameMatchState> {
         break;
     }
     _addGameEvent(payload, actionType);
-  }
-
-  //FUNÇÃO DE ATUALIZAÇÃO DE JOGADORES DE UM TIME
-  void setTeamPlayers(int teamIndex, List<UserModel> players) {
-    if (teamIndex == 0) {
-      state = state.copyWith(
-        teamA: state.teamA.copyWith(players: players),
-        teamAlength: players.length,
-      );
-    } else {
-      state = state.copyWith(
-        teamB: state.teamB.copyWith(players: players),
-        teamBlength: players.length,
-      );
-    }
-  }
-
-  //FUNÇÃO DE ADIÇÃO DE EVENTO DA PARTIDA
-  void _addGameEvent(Map<String, dynamic> payload, GameEvent eventType) {
-    try {
-      final gameEvent = GameEventModel.fromMap({
-        ...payload,
-        'type': eventType,
-        'timestamp': DateTime.now().toIso8601String(),
-      });
-      state = state.copyWith(gameEvents: [gameEvent, ...state.gameEvents]);
-    } catch (_) {}
   }
 }
 

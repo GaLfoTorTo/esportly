@@ -5,20 +5,22 @@ class StatsGameWidget extends StatelessWidget {
   final String title;
   final int teamAValue;
   final int teamBValue;
+  final bool isPercentage;
 
   const StatsGameWidget({
     super.key,
     required this.title,
     required this.teamAValue,
     required this.teamBValue,
+    this.isPercentage = false,
   });
 
   @override
   Widget build(BuildContext context) {
     //RESGATAR DIMENSÕES DO DISPOSITIVO
     var dimensions = MediaQuery.of(context).size;
-    String teamAVal = "$teamAValue${title == 'Posse de Bola' ? '%' : ''}";
-    String teamBVal = "$teamBValue${title == 'Posse de Bola' ? '%' : ''}";
+    String teamAVal = "$teamAValue${isPercentage ? '%' : ''}";
+    String teamBVal = "$teamBValue${isPercentage ? '%' : ''}";
     return Column(
       spacing: 10,
       children: [
@@ -53,7 +55,7 @@ class StatsGameWidget extends StatelessWidget {
             ),
           ],
         ),
-        if(title != 'Posse de Bola')...[
+        if(!isPercentage)...[
           Row(
             spacing: 2,
             children: [

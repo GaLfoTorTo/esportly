@@ -43,13 +43,15 @@ class PlayersLineupWidget extends StatelessWidget {
       formation = formation.reversed.toList();
     }
     final listPlayers = <Row>[];
+    int playerIndex = 0;
     formation.every((item){
       listPlayers.add(
         Row(
           mainAxisAlignment: item == 1 ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
           children: List.generate(item, (key){
             //RESGATAR JOGADOR
-            final player = players[key];
+            if (playerIndex >= players.length) return const SizedBox.shrink();
+            final player = players[playerIndex++];
 
             return Column(
               spacing: 5,
