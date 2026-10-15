@@ -2,7 +2,7 @@ import 'package:esportly/core/di/service_locator.dart';
 import 'package:esportly/core/helpers/app_helper.dart';
 import 'package:esportly/core/providers/game/game_config_provider.dart';
 import 'package:esportly/core/providers/game/game_day_provider.dart';
-import 'package:esportly/core/providers/game/game_stopwatch_provider.dart';
+import 'package:esportly/core/providers/game/game_control_provider.dart';
 import 'package:esportly/core/providers/game/game_stream_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/data/models/event_model.dart';
@@ -70,7 +70,7 @@ class GameSessionNotifier extends Notifier<GameSessionState> {
     ref.invalidate(gameMatchProvider);
     ref.invalidate(gameScheduleProvider);
     ref.invalidate(gameVotesProvider);
-    ref.invalidate(gameStopwatchProvider);
+    ref.invalidate(gameControlProvider);
     ref.invalidate(gameStreamProvider);
     ref.invalidate(gameConfigProvider);
     state = const GameSessionState();

@@ -5,15 +5,17 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:esportly/data/models/team_model.dart';
 import 'package:esportly/core/theme/app_colors.dart';
 import 'package:esportly/core/helpers/modality_helper.dart';
-import 'package:esportly/core/providers/game/game_stream_provider.dart';
 import 'package:esportly/core/helpers/event_helper.dart';
 import 'package:esportly/core/helpers/img_helper.dart';
 import 'package:esportly/core/helpers/user_helper.dart';
+import 'package:esportly/core/providers/game/game_control_provider.dart';
 import 'package:esportly/core/providers/game/game_config_provider.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
 import 'package:esportly/core/providers/game/game_votes_provider.dart';
+import 'package:esportly/core/providers/game/game_stream_provider.dart';
 import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_votes.dart';
+import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_game_control.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 import 'package:esportly/presentation/widget/charts/chart_pie_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_player_game_widget.dart';
@@ -43,6 +45,7 @@ class GameOverviewPage extends ConsumerWidget {
     final eventSession = ref.watch(eventSessionProvider);
     final gameSession = ref.watch(gameSessionProvider);
     final gameConfig = ref.watch(gameConfigProvider);
+    final gameControl = ref.watch(gameControlProvider);
     final votesSession = ref.watch(gameVotesProvider);
     final liveSession = ref.watch(gameStreamProvider);
 
@@ -92,14 +95,19 @@ class GameOverviewPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               spacing: 20,
               children: [
-                if(gameSession.ready && !liveSession.live)...[
+                if(gameSession.ready && !gameControl.isGameRunning)...[
                   ButtonTextWidget(
                     text: "Iniciar Partida",
                     icon: Icons.play_arrow,
                     width: dimensions.width,
                     backgroundColor: modalityColor,
                     height: 40,
-                    action: () => {},
+                    action: () => showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      isScrollControlled: true,
+                      builder: (_) => const BottomsheetGameControl(),
+                    ),
                   ),
                 ],
                 Text(
@@ -347,7 +355,7 @@ class GameOverviewPage extends ConsumerWidget {
                       }).toList(),
                     ),
                   ),
-                  if(gameSession.ready)...[
+                  if(gameSession.ready && !gameControl.isGameRunning)...[
                     ButtonTextWidget(
                       backgroundColor: modalityColor,
                       text: "Votar",

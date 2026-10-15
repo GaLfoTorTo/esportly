@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/theme/app_colors.dart';
 import 'package:esportly/data/models/game_model.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
-import 'package:esportly/core/providers/game/game_stopwatch_provider.dart';
+import 'package:esportly/core/providers/game/game_control_provider.dart';
 
 class TimerCounterWidget extends ConsumerWidget {
   final GameModel game;
@@ -19,7 +19,7 @@ class TimerCounterWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentGame = ref.watch(gameSessionProvider.select((s) => s.currentGame));
-    final minutesElapsed = ref.watch(gameStopwatchProvider.select((s) => s.minutesElapsed));
+    final minutesElapsed = ref.watch(gameControlProvider.select((s) => s.minutesElapsed));
 
     String timeElapsedText(int elapsed) {
       if (elapsed >= (currentGame?.duration ?? 0)) {

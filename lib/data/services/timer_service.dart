@@ -132,6 +132,7 @@ class _GameStopwatch {
 
   //FUNÇÃO PARA RESETAR CRONOMETRO
   void resetStopwatch() {
+    _stopwatch.stop();
     _stopwatch.reset();
     _stopTimers();
     _emitState();

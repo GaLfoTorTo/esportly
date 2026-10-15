@@ -19,7 +19,7 @@ enum SnapshotType { snapshot, action, unknown }
 //STATUS DE CONEXÃO DO WEBSOCKET
 enum ConnectionState { disconnected, connecting, connected, error }
 //TIPO DE EVENTO NA PARTIDA
-enum GameEvent { 
+enum GameEvent {
   //TIME
   StartGame,
   EndGame,
@@ -29,10 +29,22 @@ enum GameEvent {
   ExtraTimeEnd,
   Penalties,
 
-  //FINALIZAÇÕES
+  //FINALIZAÇÕES — FUTEBOL
   Goal,
+  Assist,
+  ShotOnPost,
+  ShotSaved,
+  ShotMissed,
+  FoulTaken,
   Defense,
+  CleanSheet,
+  PenaltySave,
+  GoalkeeperSave,
+  GoalkeeperFail,
   Penalty,
+  PenaltyMissed,
+  OwnGoal,
+  WrongPass,
 
   //BOLA PARADA
   Corner,
@@ -44,25 +56,36 @@ enum GameEvent {
 
   //FALTA E DISCIPLINA
   Foul,
-  FoulTaken,
   YellowCard,
   RedCard,
 
   //SUBSTITUIÇÃO
   Substitution,
 
-  //PASSE
-  Assist,
-
   //INTERCEPTAÇÕES
   Interception,
-
-  //GOLEIRO
-  GoalkeeperSave,
 
   //OUTROS
   Injury,
   VARCheck,
+
+  //BASQUETE
+  Point2,
+  Point3,
+  BasketAssist,
+  Rebound,
+  Steal,
+  BlockShot,
+  Turnover,
+  PersonalFoul,
+
+  //VOLEIBOL
+  Ace,
+  VolleyPoint,
+  Block,
+  DefensiveSave,
+  ServingError,
+  Fault,
 }
 //TIPO DE NOTICIAS DO EVENTO
 enum NewsType { 

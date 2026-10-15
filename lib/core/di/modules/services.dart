@@ -7,6 +7,7 @@ import 'package:esportly/data/services/user_service.dart';
 import 'package:esportly/data/services/event_service.dart';
 import 'package:esportly/data/services/firebase/firebase_service.dart';
 import 'package:esportly/data/services/timer_service.dart';
+import 'package:esportly/data/services/game_notification_service.dart';
 
 //FUNÇÃO DE INICIALIZAÇÃO DE SERVIÇOS GLOBAIS — chamada no início do app
 void registerServices(ProviderContainer container) {
@@ -15,6 +16,7 @@ void registerServices(ProviderContainer container) {
   sl.registerLazySingleton<UserService>(() => UserService());
   sl.registerLazySingleton<EventService>(() => EventService());
   sl.registerLazySingleton<TimerService>(() => TimerService());
+  sl.registerLazySingleton<GameNotificationService>(() => GameNotificationService());
 }
 
 //INICIALIZAÇÃO DO FIREBASE MESSAGING — chamada separadamente

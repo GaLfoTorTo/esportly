@@ -6,10 +6,12 @@ import 'package:esportly/core/theme/app_colors.dart';
 class StopWatchOverlayWidget extends StatefulWidget {
   final int seconds;
   final String? action;
+  final String? periodName;
   const StopWatchOverlayWidget({
-    super.key, 
+    super.key,
     this.seconds = 5,
-    this.action
+    this.action,
+    this.periodName,
   });
 
   @override
@@ -33,6 +35,11 @@ class _StopWatchOverlayWidgetState extends State<StopWatchOverlayWidget> {
       descriptionColor = AppColors.red_300;
     }else if(widget.action == 'reset'){
       description = "Parando Partida...";
+      descriptionColor = AppColors.grey_300;
+    }else if(widget.action == 'next_period'){
+      description = widget.periodName != null
+          ? 'Encerrando ${widget.periodName}...'
+          : 'Encerrando período...';
       descriptionColor = AppColors.red_300;
     }else{
       description = 'Iniciando';
@@ -49,6 +56,10 @@ class _StopWatchOverlayWidgetState extends State<StopWatchOverlayWidget> {
           description =  'Reiniciando...';
         }else if(widget.action == 'stop'){
           description = 'Recolhendo material...';
+        }else if(widget.action == 'next_period'){
+          description = widget.periodName != null
+              ? 'Iniciando ${widget.periodName}...'
+              : 'Próximo período...';
         }
       }
       setState(() {

@@ -1,4 +1,5 @@
 import 'package:esportly/core/providers/event/event_session_provider.dart';
+import 'package:esportly/core/providers/game/game_control_provider.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
 import 'package:esportly/core/providers/game/game_stream_provider.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
@@ -23,6 +24,7 @@ class GameEscalationPage extends ConsumerWidget {
     final eventSession = ref.watch(eventSessionProvider);
     final gameSession = ref.watch(gameSessionProvider);
     final gameConfig = ref.watch(gameConfigProvider);
+    final gameControl = ref.watch(gameControlProvider);
     final matchSession = ref.watch(gameMatchProvider);
     final liveSession = ref.watch(gameStreamProvider);
 
@@ -53,7 +55,7 @@ class GameEscalationPage extends ConsumerWidget {
         child: Column(
           spacing: 10,
           children: [
-            if(!liveSession.live)...[
+            if(gameSession.ready && !gameControl.isGameRunning)...[
               ButtonTextWidget(
                 text: "Definir Equipes",
                 icon: Icons.safety_divider_rounded,

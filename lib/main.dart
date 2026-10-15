@@ -12,6 +12,48 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:esportly/core/di/modules/services.dart';
 import 'package:esportly/core/di/modules/controllers.dart';
 import 'package:esportly/core/di/modules/repositories.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:esportly/data/services/game_notification_service.dart';
+import 'package:esportly/core/providers/game/game_control_provider.dart';
+import 'package:esportly/core/providers/game/game_config_provider.dart';
+import 'package:esportly/core/helpers/game_action_helper.dart';
+
+// HANDLER DE AÇÃO DA NOTIFICAÇÃO (app em foreground ou retomado)
+void _onNotificationAction(NotificationResponse response) {
+  try {
+    final container = sl<ProviderContainer>();
+    final notifier = container.read(gameControlProvider.notifier);
+    final gameState = container.read(gameControlProvider);
+    switch (response.actionId) {
+      case 'game_play_pause':
+        if (gameState.isGameRunning) {
+          notifier.pauseGame();
+        } else {
+          notifier.startGame();
+        }
+        break;
+      case 'game_stop':
+        final category = container.read(gameConfigProvider).config?.category;
+        final periodConfig = GameActionHelper.getPeriodConfig(category);
+        if (gameState.currentPeriod >= periodConfig.total) {
+          notifier.stopGame();
+        } else {
+          notifier.nextPeriod();
+        }
+        break;
+      case 'game_reset':
+        notifier.resetGame();
+        break;
+    }
+  } catch (_) {}
+}
+
+// HANDLER DE AÇÃO DA NOTIFICAÇÃO (app em background — função top-level obrigatória)
+@pragma('vm:entry-point')
+void _onBackgroundNotificationAction(NotificationResponse response) {
+  // Quando o app está completamente suspenso, a ação reabre o app
+  // e o foreground handler assume o controle
+}
 
 void main() async {
   //1 - INICIALIZAR OS BINDINGS DO FLUTTER
@@ -20,7 +62,7 @@ void main() async {
   FlutterNativeSplash.preserve(widgetsBinding: widgetBinding);
   //TENTAR TRATAMENTOS INICIAIS
   try {
-    //3 - INICIALIZAR DE VARIAVEIS DE AMBIENTE 
+    //3 - INICIALIZAR DE VARIAVEIS DE AMBIENTE
     await dotenv.load(fileName: ".env",);
     //4 - INICIALIZAÇÃO DE STORAGE
     await AppStorage.init();
@@ -41,6 +83,11 @@ void main() async {
     registerInitControllers();
     registerLazyControllers();
     registerRepositories();
+    //6.2 - INICIALIZAR SERVIÇO DE NOTIFICAÇÃO DE PARTIDA
+    await sl<GameNotificationService>().init(
+      onAction: _onNotificationAction,
+      onBackgroundAction: _onBackgroundNotificationAction,
+    );
     //7 - INICIALIZAR PROVIDER + ARVORE DE WIDGETS (APPWIDGET)
     runApp(UncontrolledProviderScope(container: container, child: const AppWidget()));
   } catch (e, stack) {

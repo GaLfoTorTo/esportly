@@ -1,3 +1,4 @@
+import 'package:esportly/core/providers/game/game_control_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +15,8 @@ import 'package:esportly/presentation/pages/games/detail/game_timeline_page.dart
 import 'package:esportly/presentation/widget/bars/header_scroll_widget.dart';
 import 'package:esportly/presentation/widget/buttons/float_button_widget.dart';
 import 'package:esportly/presentation/widget/dialogs/dialog_alert_start.dart';
-import 'package:esportly/presentation/widget/cards/card_game_detail_widget.dart';
+import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_game_control.dart';
+import 'package:esportly/presentation/widget/cards/card_score_widget.dart';
 
 class GameDetailPage extends ConsumerStatefulWidget {
   const GameDetailPage({super.key});
@@ -38,7 +40,10 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(gameDayProvider.notifier).init();
       if (!ref.read(gameSessionProvider).ready) {
-        showDialog(context: context, builder: (_) => const DialogAlertStart());
+        showDialog(
+          context: context, 
+          builder: (_) => const DialogAlertStart()
+        );
       }
     });
   }
@@ -61,8 +66,8 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
     final dimensions = MediaQuery.of(context).size;
     final eventSession = ref.watch(eventSessionProvider);
     final gameSession = ref.watch(gameSessionProvider);
+    final gameControlSession = ref.watch(gameControlProvider);
     final liveSession = ref.watch(gameStreamProvider);
-    final event = gameSession.event!;
     final modalityColor = eventSession.modalityColor;
     final modalityTextColor = eventSession.modalityTextColor;
 
@@ -83,10 +88,7 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
             SliverList(
               delegate: SliverChildListDelegate([
                 if (gameSession.currentGame != null)
-                  CardGameDetailWidget(
-                    event: event,
-                    game: gameSession.currentGame!,
-                  ),
+                  const CardScoreWidget(),
               ]),
             ),
             SliverPersistentHeader(
@@ -102,9 +104,7 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
                     onTap: (i) => setState(() => tabIndex = i),
                     indicator: UnderlineTabIndicator(
                       borderSide: BorderSide(width: 5, color: modalityColor),
-                      insets: EdgeInsets.symmetric(
-                        horizontal: dimensions.width / 5,
-                      ),
+                      insets: EdgeInsets.symmetric(horizontal: dimensions.width / 5),
                     ),
                     labelColor: modalityColor,
                     labelStyle: const TextStyle(
@@ -114,13 +114,13 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
                     unselectedLabelColor: AppColors.grey_500,
                     isScrollable: true,
                     tabAlignment: TabAlignment.start,
-                    tabs: tabs
-                        .map((tab) => SizedBox(
-                              width: 100,
-                              height: 50,
-                              child: Tab(text: tab),
-                            ))
-                        .toList(),
+                    tabs: tabs.map((tab) {
+                      return SizedBox(
+                        width: 100,
+                        height: 50,
+                        child: Tab(text: tab),
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
@@ -137,13 +137,18 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
           ],
         ),
       ),
-      floatingActionButton: liveSession.live && tabIndex == 0
+      floatingActionButton: gameControlSession.isGameRunning && tabIndex == 0
           ? FloatButtonWidget(
               floatKey: "control_games",
               icon: Icons.play_arrow,
               backgroundColor: modalityColor,
               color: modalityTextColor,
-              onPressed: () {},
+              onPressed: () => showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.transparent,
+                isScrollControlled: true,
+                builder: (_) => const BottomsheetGameControl(),
+              ),
             )
           : const SizedBox.shrink(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

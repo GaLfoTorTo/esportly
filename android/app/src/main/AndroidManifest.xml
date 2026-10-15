@@ -2,6 +2,10 @@
     package="com.example.futzada">
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Necessário para notificações no Android 13+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Necessário para notificações persistentes (ongoing) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <queries>
         <package android:name="com.google.android.apps.maps" />
         <package android:name="com.ubercab" />
