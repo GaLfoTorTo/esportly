@@ -26,7 +26,8 @@ import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_rule.dart';
 import 'package:esportly/presentation/widget/skeletons/skeleton_event_widget.dart';
 
 class EventPage extends ConsumerStatefulWidget {
-  const EventPage({super.key});
+  final int initialTab;
+  const EventPage({super.key, this.initialTab = 0});
 
   @override
   ConsumerState<EventPage> createState() => _EventPageState();
@@ -36,7 +37,7 @@ class _EventPageState extends ConsumerState<EventPage> with SingleTickerProvider
   //ESTADO - USUARIO
   UserModel user = sl<UserModel>(instanceName: 'user');
   //CONTROLLER - TABS
-  late final TabController tabController = TabController(length: 6, vsync: this);
+  late final TabController tabController = TabController(length: 6, vsync: this, initialIndex: widget.initialTab);
   int tabIndex = 0;
 
   //FUNÇÃO DE DEFINIÇÃO DE HEADER

@@ -51,7 +51,7 @@ class CardPlayerGameWidget extends StatelessWidget {
                   maxLines: 1,
                 ),
                 if(modality != null)...[
-                  if (user.player!.getMainPosition(modality!) != null)
+                  if (user.player?.getMainPosition(modality!) != null)
                     PositionWidget(
                       position: user.player!.getMainPosition(modality!)!.alias,
                       mainPosition: true,

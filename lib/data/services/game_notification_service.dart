@@ -48,6 +48,7 @@ class GameNotificationService {
     // campos usados apenas quando showControls = true
     bool isRunning = false,
     String time = '00:00',
+    String totalTime = '10:00',
     int period = 1,
     String periodLabel = 'Tempo',
     int teamAScore = 0,
@@ -73,7 +74,7 @@ class GameNotificationService {
           showProgress: true,
           maxProgress: 100,
           progress: progress,
-          styleInformation: const MediaStyleInformation(),
+          indeterminate: false,
           actions: [
             AndroidNotificationAction(
               'game_reset',
@@ -105,7 +106,7 @@ class GameNotificationService {
         await _plugin.show(
           id: _notifyGameId,
           title: '$teamAName $teamAScore × $teamBScore $teamBName',
-          body: '$period° $periodLabel · $time',
+          body: '$period° $periodLabel · $time / $totalTime',
           notificationDetails: NotificationDetails(android: android),
         );
       } else {

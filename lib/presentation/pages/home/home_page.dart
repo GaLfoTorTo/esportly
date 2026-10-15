@@ -80,8 +80,8 @@ class _HomePageState extends State<HomePage> {
         //SEÇÃO - EVENTO DO DIA
         if(homeController.events.isNotEmpty)...[
           SectionHomeWidget(
-            title: "Ao Vivo",
-            options: homeController.events,
+            title: "Minhas Peladas",
+            options: homeController.myEvents,
           )
         ],
         //SEÇÃO - ADS/PROPAGANDAS

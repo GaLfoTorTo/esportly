@@ -93,6 +93,7 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
                     ),
                     SizedBox(
                       width: dimensions.width,
+                      height: dimensions.height * 0.35,
                       child: PageView(
                         controller: inProgressController,
                         children: [

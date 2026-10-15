@@ -36,7 +36,7 @@ class CardLevelWidget extends StatelessWidget {
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
               modalityColor.withAlpha(200), 
-              BlendMode.multiply,
+              BlendMode.hardLight,
             )
           ),
         ),

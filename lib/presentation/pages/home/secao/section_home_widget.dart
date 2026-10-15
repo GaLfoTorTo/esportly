@@ -55,7 +55,7 @@ class _SectionHomeWidgetState extends State<SectionHomeWidget> {
   //FUNÇÃO DE DEFINIÇÃO DE DIMENSOES DA SEÇÃO
   BoxConstraints setSectionDimensions(){
     switch (widget.title) {
-      case "Ao Vivo":
+      case "Minhas Peladas":
         return  BoxConstraints(
           maxHeight: 300,
           maxWidth: double.infinity
@@ -96,7 +96,7 @@ class _SectionHomeWidgetState extends State<SectionHomeWidget> {
   //FUNÇÃO DE DEFINIÇÃO DE CARD DA SEÇÃO
   Widget setCardSection(value){
     switch (widget.title) {
-      case "Ao Vivo":
+      case "Minhas Peladas":
         return CardDayEventWidget(event: value);  
       case "Tarefas":
         return CardTaskWidget(task: value);  
@@ -160,7 +160,7 @@ class _SectionHomeWidgetState extends State<SectionHomeWidget> {
                 widget.title,
                 style: Theme.of(context).textTheme.headlineSmall
               ),
-              if(widget.title != 'Ao Vivo' )...[
+              if(widget.title != 'Minhas Peladas' )...[
                 ButtonTextWidget(
                   text: "Ver Mais",
                   icon: Icons.add_rounded,

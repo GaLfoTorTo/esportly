@@ -132,7 +132,7 @@ class AppRoutes {
                 ),
                 GoRoute(
                   path: 'view',
-                  pageBuilder: (_, __) => transitionToLeft(const EventPage()),
+                  pageBuilder: (_, state) => transitionToLeft(EventPage(initialTab: state.extra is int ? state.extra as int : 0)),
                   routes: [
                     GoRoute(
                       path: 'settings',

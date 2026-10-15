@@ -1,4 +1,5 @@
 import 'package:esportly/core/helpers/modality_helper.dart';
+import 'package:esportly/core/providers/game/game_day_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -11,8 +12,9 @@ import 'package:esportly/data/models/event_model.dart';
 import 'package:esportly/core/providers/game/game_schedule_provider.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 import 'package:esportly/presentation/widget/images/img_group_circle_widget.dart';
+import 'package:esportly/presentation/widget/indicators/indicator_loading_widget.dart';
 
-class CardDayEventWidget extends ConsumerWidget {
+class CardDayEventWidget extends ConsumerStatefulWidget {
   final EventModel event;
 
   const CardDayEventWidget({
@@ -21,14 +23,37 @@ class CardDayEventWidget extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CardDayEventWidget> createState() => _CardDayEventWidgetState();
+}
+
+class _CardDayEventWidgetState extends ConsumerState<CardDayEventWidget> {
+  Future<void> _enterEvent() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: IndicatorLoadingWidget()),
+    );
+    await ref.read(eventSessionProvider.notifier).setEvent(widget.event);
+    while (ref.read(gameScheduleProvider).loading) {
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
+    ref.read(gameDayProvider.notifier).init();
+    if (mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+      context.push('/event/day');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     //RESGATAR DIMENSOES DO DISPOSITIVO
     var dimensions = MediaQuery.of(context).size;
     //VERIFICAR SE HÁ PARTIDAS EM ANDAMENTO PARA ESTE EVENTO
     final inProgressGames = ref.watch(gameScheduleProvider.select((s) => s.inProgressGames));
+    final event = widget.event;
     //ESTADO - ITEMS EVENTO
     Color modalityColor = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality?.name ?? 'Football')['color'];
-    Color modalityTextColor = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality?.name ?? 'Football')['textColor'];
+    Color modalityTextColor = AppColors.white;//ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality?.name ?? 'Football')['textColor'];
     String modalityImage = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality?.name ?? 'Football')['image'];
     //RESGATAR DATA DO EVENTO
     final now = DateTime.now();
@@ -207,10 +232,7 @@ class CardDayEventWidget extends ConsumerWidget {
                   ),
                 ),
                 ButtonTextWidget(
-                  action: () {
-                    ref.read(eventSessionProvider.notifier).setEvent(event);
-                    context.go('/event/day');
-                  },
+                  action: _enterEvent,
                   width: 80,
                   height: 30,
                   text: "Entrar",

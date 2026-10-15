@@ -146,7 +146,7 @@ class GameScheduleNotifier extends Notifier<GameScheduleState> {
       nextGames: state.nextGames.where((g) => g?.id != game.id).toList(),
     );
   }
-  
+
   //FUNÇÃO DE REMOVER PARTIDA DE EM PROGRESSO
   void removeFromInProgress(GameModel game) {
     state = state.copyWith(

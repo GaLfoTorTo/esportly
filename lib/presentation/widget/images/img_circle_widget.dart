@@ -7,13 +7,15 @@ class ImgCircularWidget extends StatelessWidget {
   final String? image;
   final String? element;
   final Color? borderColor;
+  final bool online;
 
   const ImgCircularWidget({
-    super.key, 
-    required this.size, 
+    super.key,
+    required this.size,
     this.image,
     this.element,
-    this.borderColor
+    this.borderColor,
+    this.online = false,
   });
 
   @override
@@ -23,7 +25,7 @@ class ImgCircularWidget extends StatelessWidget {
       return ImgHelper.getUserImg(image);
     }
 
-    return Container(
+    final userImg = Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
@@ -38,6 +40,24 @@ class ImgCircularWidget extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(size / 2),
       ),
+    );
+
+    if (!online) return userImg;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        userImg,
+        const Positioned(
+          right: 5,
+          bottom: 0,
+          child: Icon(
+            Icons.circle,
+            size: 15,
+            color: AppColors.green_300,
+          ),
+        ),
+      ],
     );
   }
 }

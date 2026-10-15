@@ -28,7 +28,7 @@ abstract class HomeBase {
   List<EventModel> get toYou;
   List<EventModel> get nearby;
   List<EventModel> get popular;
-  List<EventModel> get live;
+  List<EventModel> get myEvents;
   List<EventModel> get today;
   //ESTADOS - USERS
   List<UserModel> get suggestionFriends;
@@ -78,7 +78,7 @@ class HomeController extends ChangeNotifier implements HomeBase {
   @override
   final List<EventModel> popular = [];
   @override
-  final List<EventModel> live = [];
+  final List<EventModel> myEvents = [];
   @override
   final List<EventModel> today = [];
   @override
@@ -97,7 +97,7 @@ class HomeController extends ChangeNotifier implements HomeBase {
     toYou.clear();
     nearby.clear();
     popular.clear();
-    live.clear();
+    myEvents.clear();
     today.clear();
     suggestionFriends.clear();
     ranking.clear();
@@ -140,6 +140,7 @@ class HomeController extends ChangeNotifier implements HomeBase {
   void handleRequest(resp) {
     //LIMPAR LISTAS ANTES DE PREENCHER
     ads.clear();
+    myEvents.clear();
     toYou.clear();
     popular.clear();
     today.clear();
@@ -156,6 +157,16 @@ class HomeController extends ChangeNotifier implements HomeBase {
     ranking.addAll(resp['ranking']           as List<Map<String, dynamic>>? ?? []);
     partidas.addAll(resp['partidas']         as List<Map<String, dynamic>>? ?? []);
     suggestionFriends.addAll(resp['friends'] as List<UserModel>? ?? []);
+
+    //PREENCHER LIVE COM EVENTOS DO USUARIO QUE ACONTECEM HOJE
+    const weekdayAbbr = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
+    final todayAbbr = weekdayAbbr[DateTime.now().weekday];
+    myEvents.addAll(events.where((e) {
+      final date = e.date;
+      if (date == null || date.isEmpty) return false;
+      return date.length == 7 || date.contains(todayAbbr);
+    }));
+
     notifyListeners();
   }
 

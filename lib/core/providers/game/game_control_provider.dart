@@ -202,7 +202,8 @@ class GameControlNotifier extends Notifier<GameControlState> {
     final isLastPeriod = period >= periodConfig.total;
 
     final baseDuration = config?.duration ?? game?.duration ?? 10;
-    final totalSec     = (baseDuration + state.extraMinutes) * 60;
+    final totalMin     = baseDuration + state.extraMinutes;
+    final totalSec     = totalMin * 60;
     final parts        = state.currentTime.split(':');
     final elapsedMin   = int.tryParse(parts[0]) ?? 0;
     final elapsedSec   = int.tryParse(parts[1]) ?? 0;
@@ -210,6 +211,7 @@ class GameControlNotifier extends Notifier<GameControlState> {
     final progressPct  = totalSec > 0
         ? ((elapsedTotal / totalSec) * 100).clamp(0, 100).round()
         : 0;
+    final totalTime    = '${totalMin.toString().padLeft(2, '0')}:00';
 
     _notificationService.showGameNotification(
       showControls: true,
@@ -218,6 +220,7 @@ class GameControlNotifier extends Notifier<GameControlState> {
       numero: game?.number ?? 0,
       isRunning: isRunning,
       time: state.currentTime,
+      totalTime: totalTime,
       period: period,
       periodLabel: periodConfig.label,
       teamAScore: matchState.teamAScore,
