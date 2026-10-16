@@ -237,7 +237,7 @@ class _CardDayEventWidgetState extends ConsumerState<CardDayEventWidget> {
                   height: 30,
                   text: "Entrar",
                   backgroundColor: modalityColor.withAlpha(200),
-                    textColor: modalityTextColor,
+                  textColor: modalityTextColor,
                   borderRadius: 50,
                 )
               ],

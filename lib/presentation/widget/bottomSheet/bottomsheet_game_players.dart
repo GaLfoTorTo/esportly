@@ -96,7 +96,7 @@ class _BottomSheetGamePlayersState extends ConsumerState<BottomSheetGamePlayers>
               textAlign: TextAlign.center,
             ),
           ),
-          if (selectedPlayers.isNotEmpty)
+          if (selectedPlayers.isNotEmpty)...[
             Container(
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -125,8 +125,9 @@ class _BottomSheetGamePlayersState extends ConsumerState<BottomSheetGamePlayers>
                 ),
               ),
             )
-          else
-            const SizedBox.shrink(),
+          ]else...[
+            const SizedBox.shrink()
+          ],
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(10.0),

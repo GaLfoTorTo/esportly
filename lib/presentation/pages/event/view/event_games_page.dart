@@ -6,7 +6,7 @@ import 'package:esportly/core/helpers/date_helper.dart';
 import 'package:esportly/data/models/event_model.dart';
 import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/widget/cards/card_game_widget.dart';
-import 'package:esportly/presentation/widget/cards/card_game_live_widget.dart';
+import 'package:esportly/presentation/widget/cards/card_game_list_widget.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 import 'package:esportly/presentation/widget/skeletons/skeleton_games_widget.dart';
 import 'package:esportly/presentation/pages/event/error/erro_game_page.dart';
@@ -98,9 +98,10 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
                         controller: inProgressController,
                         children: [
                           ...gameSession.inProgressGames.take(3).map((game) {
-                            return CardGameLiveWidget(
-                              event: event, 
-                              game: game!
+                            return CardGameWidget(
+                              event: event,
+                              game: game!,
+                              live: true,
                             );
                           }),
                         ],
@@ -145,12 +146,11 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
                       children: gameSession.nextGames.asMap().entries.take(5).map((item) {
                         final key = item.key;
                         final game = item.value;
-                        return CardGameWidget(
+                        return CardGameListWidget(
                           width: dimensions.width - 10,
                           event: event,
                           game: game!,
                           gameDate: date,
-                          navigate: key < 1,
                           active: key < 1,
                         );
                       }).toList(),
@@ -190,7 +190,7 @@ class _EventGamesPageState extends ConsumerState<EventGamesPage> {
                     spacing: 20,
                     children: [
                       ...gameSession.scheduledGames.take(10).map((game) {
-                        return CardGameWidget(
+                        return CardGameListWidget(
                           width: dimensions.width - 10,
                           event: event,
                           game: game!,

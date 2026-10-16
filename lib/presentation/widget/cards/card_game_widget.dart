@@ -1,34 +1,30 @@
-import 'dart:math';
-import 'package:intl/intl.dart';
+import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/theme/app_colors.dart';
 import 'package:esportly/core/theme/app_icones.dart';
 import 'package:esportly/core/helpers/modality_helper.dart';
 import 'package:esportly/data/models/event_model.dart';
 import 'package:esportly/data/models/game_model.dart';
+import 'package:esportly/data/models/team_model.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
+import 'package:esportly/core/providers/game/game_match_provider.dart';
+import 'package:esportly/presentation/widget/animated/animated_ellipsis.dart';
+import 'package:esportly/presentation/widget/others/timer_counter_widget.dart';
+import 'package:intl/intl.dart';
 
 class CardGameWidget extends ConsumerStatefulWidget {
-  final double? width;
   final EventModel event;
   final GameModel game;
-  final String gameDate;
-  final bool? navigate;
-  final bool? active;
-  final bool? historic;
+  final bool live;
 
   const CardGameWidget({
     super.key,
-    this.width,
     required this.event,
     required this.game,
-    required this.gameDate,
-    this.navigate = false,
-    this.active = false,
-    this.historic = false,
+    this.live = false,
   });
 
   @override
@@ -36,165 +32,200 @@ class CardGameWidget extends ConsumerStatefulWidget {
 }
 
 class _CardGameWidgetState extends ConsumerState<CardGameWidget> {
-  //ESTADO - ITEMS EVENTO
   late Color modalityColor;
   late Color modalityTextColor;
   late String modalityImage;
-  //RESGATAR PROPS DE NAVEGAÇÃO E ATIVAÇÃO DO CARD
-  bool propNavigate = false;
-  bool propActive = false;
-  bool propHistoric = false;
 
   @override
   void initState() {
     super.initState();
-    //RESGATAR CORES E DATAS DA MODALIDADE DA PARTIDA
     modalityColor = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality?.name ?? 'Football')['color'];
-    modalityTextColor = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality?.name ?? 'Football')['textColor'];
+    modalityTextColor = AppColors.white;//ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality?.name ?? 'Football')['textColor'];
     modalityImage = ModalityHelper.getEventModalityColor(widget.event.gameConfig?.category ?? widget.event.modality?.name ?? 'Football')['image'];
-    //RESGATAR PROP DE NAVEGAÇÃO PADRÃO
-    propNavigate = widget.navigate != null ? widget.navigate! : false;
-    //RESGATAR PROP DE ATIVAÇÃO PADRÃO DO CARD
-    propActive = widget.active != null ? widget.active! : false;
-    //RESGATAR PROP DE HISTÓRICO PADRÃO DO CARD
-    propHistoric = widget.historic != null ? widget.historic! : false;
   }
 
   @override
   Widget build(BuildContext context) {
+    final TeamModel teamA = widget.game.teams!.first;
+    final TeamModel teamB = widget.game.teams!.last;
+    
+    final teamAScore = ref.watch(gameMatchProvider.select((s) => s.teamAScore));
+    final teamBScore = ref.watch(gameMatchProvider.select((s) => s.teamBScore));
 
-    //RESGATAR HORARIO DE INICIO E FIM DA PARTIDA
     var gameStartTime = DateFormat.Hm().format(widget.game.startTime!);
     var gameEndTime = DateFormat.Hm().format(widget.game.endTime!);
-    //RESGATAR RESULTADO DA PARTIDA
-    int teamAScore = widget.game.result != null && widget.game.result!.teamAScore > 0 ? widget.game.result!.teamAScore: 0;
-    int teamBScore = widget.game.result != null && widget.game.result!.teamBScore > 0 ? widget.game.result!.teamBScore: 0;
-    //GERAR NUMERO ALEATORIO PARA INDEX DE EMBLEMAS
-    int indexA = Random().nextInt(8);
-    int indexB = Random().nextInt(8);
-    //GERAR INDEX ALEATORIO PARA EMBLEMA DE EQUIPES
-    String emblemaIndexA = "emblema_${indexA == 0 ? 1 : indexA}";
-    String emblemaIndexB = "emblema_${indexB == 0 ? 1 : indexB}";
 
-    return InkWell(
-      onTap: (){
-        //VERIFICAR SE CLICK ESTA HABILITADO
-        if(propNavigate) {
-          //DEFINIR PARTIDA ATUAL
-          ref.read(gameSessionProvider.notifier).setGame(widget.game, false);
-          //NAVEGAR PARA PAGINA DE DETALHES DO JOGO
-          context.push('/games/overview');
-        }
-      },
-      borderRadius: BorderRadius.circular(20),
+    return Card(
       child: Container(
-        width: widget.width,
+        height: 300,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.dark_500.withAlpha(30),
-              spreadRadius: 0.5,
-              blurRadius: 5,
-              offset: const Offset(2, 5),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(10),
           image: DecorationImage(
             image: AssetImage(modalityImage) as ImageProvider,
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
-              modalityColor.withAlpha(200),
-              BlendMode.srcATop,
-            )
+              modalityColor.withAlpha(200), 
+              BlendMode.multiply,
+            ),
           ),
         ),
         child: Container(
+          height: 300,
           padding: const EdgeInsets.all(10),
-          decoration: !propActive ? BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            color: AppColors.grey_300,
-            backgroundBlendMode: BlendMode.saturation,
-          ) : null,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            gradient: RadialGradient(
+              center: AlignmentGeometry.bottomRight,
+              radius: 1.7,
+              colors: [
+                modalityColor.withAlpha(10),
+                modalityColor,
+              ],
+            ),
+          ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 10,
             children: [
+              if(widget.live)...[
+                Container(
+                  width: 50,
+                  decoration: BoxDecoration(
+                    color: AppColors.red_300,
+                    borderRadius: BorderRadius.circular(50)
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: Icon(
+                      Icons.sensors, 
+                      size: 15,
+                      color: AppColors.white
+                    ),
+                  ),
+                ),
+              ],
               Text(
                 "#${widget.game.number}",
-                style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-                  color: modalityTextColor
-                )
+                style: Theme.of(context).textTheme.headlineLarge!.copyWith(color: modalityTextColor),
               ),
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    SvgPicture.asset(
-                      AppIcones.emblemas[emblemaIndexA]!,
-                      width: 50,
-                      height: 50,
-                      colorFilter: ColorFilter.mode(
-                        modalityTextColor,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                    Column(
+              Row(
+                spacing: 30,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 100,
+                    height: 120,
+                    child: Column(
                       spacing: 5,
                       children: [
-                        Text(
-                          widget.gameDate,
-                          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                            color: modalityTextColor,
-                            fontSize: !propHistoric ? 18 : 16
-                          ),
+                        SvgPicture.asset(
+                          AppIcones.emblemas[teamA.emblem ?? "emblema_2"]!,
+                          width: 60,
+                          colorFilter: ColorFilter.mode(modalityTextColor, BlendMode.srcIn),
                         ),
-                        if(propHistoric)...[
-                          Row(
-                            spacing: 20,
-                            children: [
-                              Text(
-                                "$teamAScore",
-                                style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-                                  color: modalityTextColor,
-                                  fontSize: 42
-                                ),
-                              ),
-                              Text(
-                                "X",
-                                style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-                                  color: modalityTextColor,
-                                ),
-                              ),
-                              Text(
-                                "$teamBScore",
-                                style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-                                  color: modalityTextColor,
-                                  fontSize: 42
-                                ),
-                              ),
-                            ],
-                          )
-                        ],
                         Text(
-                          "$gameStartTime - $gameEndTime",
-                          style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                            color: modalityTextColor,
-                          ),
+                          "${teamA.name}",
+                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: modalityTextColor),
                         ),
                       ],
                     ),
-                    SvgPicture.asset(
-                      AppIcones.emblemas[emblemaIndexB]!,
-                      width: 50,
-                      height: 50,
-                      colorFilter: ColorFilter.mode(
-                        modalityTextColor,
-                        BlendMode.srcIn,
-                      ),
+                  ),
+                  if(widget.live)...[
+                    Text(
+                      "$teamAScore",
+                      style: Theme.of(context).textTheme.headlineLarge!.copyWith(fontSize: 40, color: modalityTextColor),
+                    ),
+                  ],
+                  Text(
+                    "X",
+                    style: Theme.of(context).textTheme.headlineLarge!.copyWith(fontSize: 35, color: modalityTextColor),
+                  ),
+                  if(widget.live)...[
+                    Text(
+                      "$teamBScore",
+                      style: Theme.of(context).textTheme.headlineLarge!.copyWith(fontSize: 40, color: modalityTextColor),
+                    ),
+                  ],
+                  SizedBox(
+                    width: 100,
+                    height: 120,
+                    child: Column(
+                      spacing: 5,
+                      children: [
+                        SvgPicture.asset(
+                          AppIcones.emblemas[teamB.emblem ?? "emblema_2"]!,
+                          width: 60,
+                          colorFilter: ColorFilter.mode(modalityTextColor, BlendMode.srcIn),
+                        ),
+                        Text(
+                          "${teamB.name}",
+                          style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: modalityTextColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if(widget.live)...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Column(
+                      children: [
+                        TimerCounterWidget(game: widget.game, color: AppColors.white),
+                        Container(
+                          height: 20,
+                          width: 50,
+                          alignment: Alignment.bottomCenter,
+                          margin: const EdgeInsets.symmetric(vertical: 15),
+                          decoration: BoxDecoration(
+                            color: AppColors.white.withAlpha(100),
+                            borderRadius: const BorderRadius.all(Radius.circular(5)),
+                          ),
+                          child: const AnimatedEllipsis(dotSize: 5, dotColor: AppColors.white),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ),
+              ]else...[
+                Column(
+                  spacing: 5,
+                  children: [
+                    Text(
+                      "Previsão de Duração",
+                      style: Theme.of(context).textTheme.displayMedium!.copyWith(color: modalityTextColor),
+                    ),
+                    Row(
+                      spacing: 10,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.timer,
+                          size: 15,
+                          color: modalityTextColor
+                        ),
+                        Text(
+                          "$gameStartTime - $gameEndTime",
+                          style: Theme.of(context).textTheme.labelLarge!.copyWith(color: modalityTextColor),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+              ButtonTextWidget(
+                action: () {
+                  ref.read(gameSessionProvider.notifier).setGame(widget.game, false);
+                  context.push('/games/overview');
+                },
+                width: 80,
+                height: 30,
+                text: widget.live ? "Acompanhar" : "Iniciar",
+                icon: widget.live ? null : Icons.play_arrow ,
+                backgroundColor: modalityColor.withAlpha(150),
+                textColor: AppColors.white,
+                borderRadius: 50,
+              )
             ],
           ),
         ),

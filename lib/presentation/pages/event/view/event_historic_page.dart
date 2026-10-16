@@ -9,7 +9,7 @@ import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/pages/event/error/erro_historic_game_page.dart';
 import 'package:esportly/presentation/widget/skeletons/skeleton_games_widget.dart';
 import 'package:esportly/presentation/widget/bars/header_widget.dart';
-import 'package:esportly/presentation/widget/cards/card_game_widget.dart';
+import 'package:esportly/presentation/widget/cards/card_game_list_widget.dart';
 
 class EventHistoricPage extends ConsumerStatefulWidget {
   const EventHistoricPage({super.key});
@@ -88,12 +88,11 @@ class _EventHistoricPageState extends ConsumerState<EventHistoricPage> with Sing
                         children: listGames!.map((game) {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 5),
-                            child: CardGameWidget(
+                            child: CardGameListWidget(
                               width: dimensions.width - 20,
                               event: event,
                               game: game,
                               gameDate: DateHelper.getDateLabel(game.createdAt!),
-                              navigate: true,
                               active: false,
                               historic: true,
                             ),

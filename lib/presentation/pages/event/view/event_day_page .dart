@@ -19,13 +19,13 @@ import 'package:esportly/core/providers/game/game_schedule_provider.dart';
 import 'package:esportly/presentation/widget/badges/position_widget.dart';
 import 'package:esportly/presentation/widget/bars/header_widget.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
-import 'package:esportly/presentation/widget/cards/card_day_game_widget.dart';
-import 'package:esportly/presentation/widget/cards/card_game_live_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_game_widget.dart';
+import 'package:esportly/presentation/widget/cards/card_game_list_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_mvp_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_player_game_widget.dart';
 import 'package:esportly/presentation/widget/images/img_circle_widget.dart';
 import 'package:esportly/presentation/widget/indicators/indicator_page_widget.dart';
+import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_game_presentes.dart';
 
 class EventDayPage extends ConsumerStatefulWidget {
   const EventDayPage({super.key});
@@ -89,18 +89,17 @@ class EventDayPageState extends ConsumerState<EventDayPage> {
                 onStatusChanged: (status) {},
               ),
               //PARTIDA AO VIVO
-              if (isLive) ...[
-                const _SectionHeader(
-                  title: 'Partida Ao Vivo',
-                  icon: Icons.sensors,
-                  color: AppColors.red_300,
-                  live: true,
-                ),
-                CardGameLiveWidget(
-                  event: event,
-                  game: schedule.inProgressGames.first!,
-                ),
-              ],             
+              _SectionHeader(
+                title: isLive ? 'Partida Ao Vivo' : 'Próxima Partida',
+                icon: isLive ? Icons.sensors : Icons.sports,
+                color: isLive ? AppColors.red_300 : modalityColor,
+                live: isLive,
+              ),
+              CardGameWidget(
+                event: event,
+                game: isLive ? schedule.inProgressGames.first! : schedule.nextGames.first!,
+                live: isLive,
+              ),             
               // FEED DE EVENTOS DA PARTIDA
               if(isLive && gameEvents.isNotEmpty)...[
                 _SectionHeader(
@@ -126,18 +125,17 @@ class EventDayPageState extends ConsumerState<EventDayPage> {
                 ),
                 SizedBox(
                   width: dimensions.width,
-                  height: 150,
+                  height: 180,
                   child: PageView(
                     controller: _nextGamesController,
-                    children: schedule.nextGames.take(3).map((g) {
+                    children: schedule.nextGames.skip(1).take(3).map((g) {
                       return Padding(
                         padding: const EdgeInsets.only(right: 10, bottom: 10),
-                        child: CardGameWidget(
+                        child: CardGameListWidget(
                           width: dimensions.width - 10,
                           event: event,
                           game: g!,
                           gameDate: 'Hoje',
-                          navigate: false,
                           active: true,
                         ),
                       );
@@ -158,7 +156,12 @@ class EventDayPageState extends ConsumerState<EventDayPage> {
                   color: modalityColor,
                   badge: '${participantsPresent.length}',
                   actionLabel: 'Ver Todos',
-                  action: () => context.push('/event/participants'),
+                  action: () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
+                    builder: (_) => const BottomSheetGamePresentes(),
+                  ),
                 ),
                 SizedBox(
                   height: 210,
@@ -490,19 +493,48 @@ class _GameEventsFeed extends StatelessWidget {
 
   static ({IconData icon, Color color, String label}) _eventMeta(GameEvent? type) {
     return switch (type) {
-      GameEvent.Goal      => (icon: Icons.sports_soccer_rounded, color: AppColors.green_400, label: 'Gol'),
-      GameEvent.OwnGoal   => (icon: Icons.sports_soccer_rounded, color: AppColors.red_300, label: 'Gol Contra'),
-      GameEvent.YellowCard => (icon: Icons.rectangle_rounded, color: AppColors.yellow_500, label: 'Cartão Amarelo'),
-      GameEvent.RedCard   => (icon: Icons.rectangle_rounded, color: AppColors.red_400, label: 'Cartão Vermelho'),
-      GameEvent.Corner    => (icon: Icons.flag_rounded, color: AppColors.blue_300, label: 'Escanteio'),
-      GameEvent.Foul      => (icon: Icons.sports_handball_rounded, color: AppColors.orange_400, label: 'Falta'),
-      GameEvent.Substitution => (icon: Icons.swap_horiz_rounded, color: AppColors.cyan_400, label: 'Substituição'),
-      GameEvent.Penalty   => (icon: Icons.sports_soccer_rounded, color: AppColors.purple_300, label: 'Pênalti'),
-      GameEvent.Offside   => (icon: Icons.arrow_back_rounded, color: AppColors.orange_300, label: 'Impedimento'),
-      GameEvent.VARCheck  => (icon: Icons.videocam_rounded, color: AppColors.indigo_300, label: 'VAR'),
-      GameEvent.Injury    => (icon: Icons.medical_services_rounded, color: AppColors.red_200, label: 'Lesão'),
-      GameEvent.StartGame => (icon: Icons.play_arrow_rounded, color: AppColors.green_300, label: 'Início'),
-      GameEvent.EndGame   => (icon: Icons.stop_rounded, color: AppColors.red_300, label: 'Fim'),
+      // ── TEMPO ──────────────────────────────────────────────────────────────
+      GameEvent.StartGame    => (icon: Icons.play_arrow_rounded,          color: AppColors.green_300,  label: 'Início'),
+      GameEvent.EndGame      => (icon: Icons.stop_rounded,                color: AppColors.red_300,    label: 'Fim'),
+      GameEvent.HalfTimeEnd  => (icon: Icons.pause_rounded,               color: AppColors.grey_500,   label: 'Intervalo'),
+      GameEvent.ExtraTime    => (icon: Icons.more_time_rounded,           color: AppColors.orange_300, label: 'Acréscimos'),
+      // ── FUTEBOL ────────────────────────────────────────────────────────────
+      GameEvent.Goal         => (icon: Icons.sports_soccer_rounded,       color: AppColors.green_400,  label: 'Gol'),
+      GameEvent.OwnGoal      => (icon: Icons.sports_soccer_rounded,       color: AppColors.red_300,    label: 'Gol Contra'),
+      GameEvent.Assist       => (icon: Icons.handshake_rounded,           color: AppColors.teal_400,   label: 'Assistência'),
+      GameEvent.ShotOnPost   => (icon: Icons.sports_soccer_outlined,      color: AppColors.green_400,  label: 'Trave'),
+      GameEvent.ShotSaved    => (icon: Icons.sports_soccer_outlined,      color: AppColors.green_500,  label: 'Chute Defend.'),
+      GameEvent.Penalty      => (icon: Icons.sports_rounded,              color: AppColors.purple_300, label: 'Pênalti'),
+      GameEvent.PenaltyMissed=> (icon: Icons.sports_rounded,              color: AppColors.red_400,    label: 'Pênalti Perdido'),
+      GameEvent.PenaltySave  => (icon: Icons.shield_rounded,              color: AppColors.yellow_600, label: 'Defesa Pênalti'),
+      GameEvent.GoalkeeperSave=>(icon: Icons.shield_rounded,              color: AppColors.yellow_500, label: 'Defesa Goleiro'),
+      GameEvent.Corner       => (icon: Icons.flag_rounded,                color: AppColors.blue_300,   label: 'Escanteio'),
+      GameEvent.FreeKick     => (icon: Icons.sports_soccer_outlined,      color: AppColors.blue_200,   label: 'Tiro Livre'),
+      GameEvent.Offside      => (icon: Icons.arrow_back_rounded,          color: AppColors.orange_300, label: 'Impedimento'),
+      GameEvent.Foul         => (icon: Icons.sports_handball_rounded,     color: AppColors.orange_400, label: 'Falta'),
+      GameEvent.YellowCard   => (icon: Icons.rectangle_rounded,           color: AppColors.yellow_500, label: 'Cartão Amarelo'),
+      GameEvent.RedCard      => (icon: Icons.rectangle_rounded,           color: AppColors.red_400,    label: 'Cartão Vermelho'),
+      GameEvent.Defense      => (icon: Icons.shield_rounded,              color: AppColors.yellow_300, label: 'Desarme'),
+      GameEvent.VARCheck     => (icon: Icons.videocam_rounded,            color: AppColors.indigo_300, label: 'VAR'),
+      // ── BASQUETE ───────────────────────────────────────────────────────────
+      GameEvent.Point2       => (icon: Icons.sports_basketball_rounded,   color: AppColors.green_300,  label: 'Cesta 2pts'),
+      GameEvent.Point3       => (icon: Icons.filter_3_rounded,            color: AppColors.green_500,  label: 'Cesta 3pts'),
+      GameEvent.BasketAssist => (icon: Icons.handshake_rounded,           color: AppColors.blue_300,   label: 'Assistência'),
+      GameEvent.Rebound      => (icon: Icons.vertical_align_top_rounded,  color: AppColors.teal_300,   label: 'Rebote'),
+      GameEvent.Steal        => (icon: Icons.back_hand_rounded,           color: AppColors.teal_500,   label: 'Roubo de Bola'),
+      GameEvent.BlockShot    => (icon: Icons.front_hand_rounded,          color: AppColors.teal_300,   label: 'Bloqueio'),
+      GameEvent.Turnover     => (icon: Icons.swap_horiz_rounded,          color: AppColors.orange_300, label: 'Turnover'),
+      GameEvent.PersonalFoul => (icon: Icons.warning_amber_rounded,       color: AppColors.yellow_500, label: 'Falta Pessoal'),
+      // ── VOLEIBOL ───────────────────────────────────────────────────────────
+      GameEvent.Ace          => (icon: Icons.bolt_rounded,                color: AppColors.green_500,  label: 'Ace'),
+      GameEvent.VolleyPoint  => (icon: Icons.sports_volleyball_rounded,   color: AppColors.green_300,  label: 'Ponto'),
+      GameEvent.Block        => (icon: Icons.front_hand_rounded,          color: AppColors.teal_300,   label: 'Bloqueio'),
+      GameEvent.DefensiveSave=> (icon: Icons.shield_rounded,              color: AppColors.blue_300,   label: 'Defesa'),
+      GameEvent.ServingError => (icon: Icons.sports_volleyball_outlined,  color: AppColors.red_300,    label: 'Erro de Saque'),
+      GameEvent.Fault        => (icon: Icons.close_rounded,               color: AppColors.orange_300, label: 'Falta'),
+      // ── COMPARTILHADOS ─────────────────────────────────────────────────────
+      GameEvent.Substitution => (icon: Icons.swap_horiz_rounded,          color: AppColors.cyan_400,   label: 'Substituição'),
+      GameEvent.Injury       => (icon: Icons.medical_services_rounded,    color: AppColors.red_200,    label: 'Lesão'),
       _ => (icon: Icons.circle_rounded, color: AppColors.grey_500, label: type?.name ?? 'Evento'),
     };
   }
