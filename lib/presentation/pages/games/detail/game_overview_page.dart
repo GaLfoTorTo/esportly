@@ -12,7 +12,7 @@ import 'package:esportly/core/providers/game/game_control_provider.dart';
 import 'package:esportly/core/providers/game/game_config_provider.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
 import 'package:esportly/core/providers/game/game_votes_provider.dart';
-import 'package:esportly/core/providers/game/game_stream_provider.dart';
+import 'package:esportly/core/providers/game/game_room_provider.dart';
 import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_votes.dart';
 import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_game_control.dart';
@@ -47,7 +47,7 @@ class GameOverviewPage extends ConsumerWidget {
     final gameConfig = ref.watch(gameConfigProvider);
     final gameControl = ref.watch(gameControlProvider);
     final votesSession = ref.watch(gameVotesProvider);
-    final liveSession = ref.watch(gameStreamProvider);
+    final liveSession = ref.watch(gameRoomProvider);
 
     //LOADING
     if (gameSession.event == null || gameSession.currentGame == null) {

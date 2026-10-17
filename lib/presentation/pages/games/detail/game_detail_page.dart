@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/theme/app_icones.dart';
 import 'package:esportly/core/theme/app_colors.dart';
-import 'package:esportly/core/providers/game/game_day_provider.dart';
+import 'package:esportly/core/providers/event/event_room_provider.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
-import 'package:esportly/core/providers/game/game_stream_provider.dart';
+import 'package:esportly/core/providers/game/game_room_provider.dart';
 import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/pages/games/detail/game_escalation_page.dart';
 import 'package:esportly/presentation/pages/games/detail/game_overview_page.dart';
@@ -38,7 +38,6 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
     scrollController.addListener(handleScroll);
     //INICIAR PARTICIPANTES
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(gameDayProvider.notifier).init();
       if (!ref.read(gameSessionProvider).ready) {
         showDialog(
           context: context, 
@@ -67,7 +66,7 @@ class GameDetailPageState extends ConsumerState<GameDetailPage> with SingleTicke
     final eventSession = ref.watch(eventSessionProvider);
     final gameSession = ref.watch(gameSessionProvider);
     final gameControlSession = ref.watch(gameControlProvider);
-    final liveSession = ref.watch(gameStreamProvider);
+    final liveSession = ref.watch(gameRoomProvider);
     final modalityColor = eventSession.modalityColor;
     final modalityTextColor = eventSession.modalityTextColor;
 

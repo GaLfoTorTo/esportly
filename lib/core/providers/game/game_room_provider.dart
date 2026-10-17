@@ -5,21 +5,22 @@ import 'package:esportly/data/models/event_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/enum/enums.dart';
 import 'package:esportly/data/models/snapshot_model.dart';
-import 'package:esportly/data/services/game_stream_service.dart';
+import 'package:esportly/data/services/stream_service.dart';
+import 'package:esportly/core/providers/stream_service_provider.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
 import 'package:esportly/core/providers/game/game_match_provider.dart';
 import 'package:go_router/go_router.dart';
 
-//ESTADO - GAME STREAM
-class GameStreamState {
+//ESTADO - GAME ROOM
+class GameRoomState {
   final bool ready;
   final bool error;
   final bool loading;
   final bool live;
   final EventModel? event;
   final ConnectionState streamState;
-  
-  const GameStreamState({
+
+  const GameRoomState({
     this.ready = false,
     this.error = false,
     this.loading = false,
@@ -28,14 +29,14 @@ class GameStreamState {
     this.streamState = ConnectionState.disconnected
   });
 
-  GameStreamState copyWith({
+  GameRoomState copyWith({
     bool? ready,
     bool? error,
     bool? loading,
     bool? live,
     EventModel? event,
     ConnectionState? streamState
-  }) => GameStreamState(
+  }) => GameRoomState(
     ready: ready ?? this.ready,
     error: error ?? this.error,
     loading: loading ?? this.loading,
@@ -45,24 +46,20 @@ class GameStreamState {
   );
 }
 
-//NOTIFICADOR - GAME STREAM
-class GameStreamNotifier extends Notifier<GameStreamState> {
-  final GameStreamService _streamService = GameStreamService();
+//NOTIFICADOR - GAME ROOM
+class GameRoomNotifier extends Notifier<GameRoomState> {
+  StreamService get _streamService => ref.read(streamServiceProvider);
   StreamSubscription<SnapshotModel>? _streamSub;
 
   @override
-  GameStreamState build() => const GameStreamState();
+  GameRoomState build() => const GameRoomState();
 
   //FUNÇÃO INICIALIZAÇÃO
   void init(EventModel event) {
-    //ENCERRAR PROVIDER NA MEMORIA
-    //dispose();
     try {
-      state = state.copyWith(loading: true);
-      state = state.copyWith(
-        event: event,
-      );
+      state = state.copyWith(loading: true, event: event);
       _streamService.init();
+      if (event.uuid != null) connectChannel(uuid: event.uuid!);
     } catch (e) {
       state = state.copyWith(error: true);
       final ctx = sl<GoRouter>().routerDelegate.navigatorKey.currentContext;
@@ -75,12 +72,12 @@ class GameStreamNotifier extends Notifier<GameStreamState> {
   void dispose() {
     ref.onDispose(disconnectChannel);
     ref.invalidate(gameMatchProvider);
-    ref.invalidate(gameStreamProvider);
-    state = const GameStreamState();
+    ref.invalidate(gameRoomProvider);
+    state = const GameRoomState();
   }
 
   //FUNÇÃO DE CONEXÃO NO CANAL DO EVENTO
-  Future<void> connectChannel({required String uuid}) async{
+  Future<void> connectChannel({required String uuid}) async {
     try {
       _streamService.connect(uuid: uuid);
       _streamSub?.cancel();
@@ -94,7 +91,7 @@ class GameStreamNotifier extends Notifier<GameStreamState> {
   }
 
   //FUNÇÃO PARA DESCONECTAR DO CANAL DO EVENTO
-  Future<void> disconnectChannel() async{
+  Future<void> disconnectChannel() async {
     try {
       _streamSub?.cancel();
       _streamSub = null;
@@ -107,7 +104,7 @@ class GameStreamNotifier extends Notifier<GameStreamState> {
     }
   }
 
-  //FUNÇÃO DE MANIPULAÇÃO DE STREAM
+  //FUNÇÃO DE MANIPULAÇÃO DE STREAM — APENAS EVENTOS DE PARTIDA
   void handleStream(SnapshotModel message) {
     if (message.type == SnapshotType.unknown) return;
     final session = ref.read(gameSessionProvider);
@@ -119,5 +116,5 @@ class GameStreamNotifier extends Notifier<GameStreamState> {
   }
 }
 
-//PROVIDER - GAME STREAM
-final gameStreamProvider = NotifierProvider<GameStreamNotifier, GameStreamState>(GameStreamNotifier.new);
+//PROVIDER - GAME ROOM
+final gameRoomProvider = NotifierProvider<GameRoomNotifier, GameRoomState>(GameRoomNotifier.new);

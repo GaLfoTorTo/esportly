@@ -1,7 +1,7 @@
 import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/core/providers/game/game_control_provider.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
-import 'package:esportly/core/providers/game/game_stream_provider.dart';
+import 'package:esportly/core/providers/game/game_room_provider.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,7 +26,7 @@ class GameEscalationPage extends ConsumerWidget {
     final gameConfig = ref.watch(gameConfigProvider);
     final gameControl = ref.watch(gameControlProvider);
     final matchSession = ref.watch(gameMatchProvider);
-    final liveSession = ref.watch(gameStreamProvider);
+    final liveSession = ref.watch(gameRoomProvider);
 
     final teamA = matchSession.teamA;
     final teamB = matchSession.teamB;

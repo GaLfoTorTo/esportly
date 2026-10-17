@@ -11,7 +11,7 @@ import 'package:esportly/core/helpers/loading_overlay.dart';
 import 'package:esportly/core/providers/game/game_config_provider.dart';
 import 'package:esportly/core/providers/game/game_session_provider.dart';
 import 'package:esportly/core/providers/game/game_match_provider.dart';
-import 'package:esportly/core/providers/game/game_day_provider.dart';
+import 'package:esportly/core/providers/event/event_room_provider.dart';
 import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/widget/bars/header_widget.dart';
 import 'package:esportly/presentation/widget/images/img_circle_widget.dart';
@@ -43,7 +43,7 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
     final qtdPlayers = ref.read(gameConfigProvider).config?.playersPerTeam ?? 0;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final participantsPresent = ref.read(gameDayProvider).participantsPresent;
+      final participantsPresent = ref.read(eventRoomProvider).participantsPresent;
       final ready = ref.read(gameSessionProvider).ready;
       if (!ready && participantsPresent.length < qtdPlayers * 2) {
         showDialog(context: context, builder: (_) => const DialogAlertTeam());
@@ -60,11 +60,11 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
   Future<void> setPlayersToTeam(bool randomize) async {
     await Future.delayed(const Duration(seconds: 2));
     final qtdPlayers = ref.read(gameConfigProvider).config?.playersPerTeam ?? 0;
-    final presents = ref.read(gameDayProvider).participantsPresent;
+    final presents = ref.read(eventRoomProvider).participantsPresent;
     var players = presents.take(qtdPlayers * 2).toList();
     final remaining = presents.skip(qtdPlayers * 2).toList();
     if (randomize) players = [...players]..shuffle(Random());
-    ref.read(gameDayProvider.notifier).setParticipantsPresent(remaining);
+    ref.read(eventRoomProvider.notifier).setParticipantsPresent(remaining);
     ref.read(gameMatchProvider.notifier).setPlayersTeam(0, players.take(qtdPlayers).toList());
     ref.read(gameMatchProvider.notifier).setPlayersTeam(1, players.skip(qtdPlayers).take(qtdPlayers).toList());
   }
@@ -73,9 +73,9 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
   Future<void> resetTeams() async {
     await Future.delayed(const Duration(seconds: 2));
     final matchSession = ref.read(gameMatchProvider);
-    final current = ref.read(gameDayProvider).participantsPresent;
+    final current = ref.read(eventRoomProvider).participantsPresent;
     final allPresent = [...current, ...matchSession.teamA.players, ...matchSession.teamB.players];
-    ref.read(gameDayProvider.notifier).setParticipantsPresent(allPresent);
+    ref.read(eventRoomProvider.notifier).setParticipantsPresent(allPresent);
     ref.read(gameMatchProvider.notifier).setPlayersTeam(0, []);
     ref.read(gameMatchProvider.notifier).setPlayersTeam(1, []);
   }
@@ -110,11 +110,11 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
         participantsPresentClone = [];
         break;
       case "cancel":
-        ref.read(gameDayProvider.notifier).setParticipantsPresent(participantsPresentClone.toList());
+        ref.read(eventRoomProvider.notifier).setParticipantsPresent(participantsPresentClone.toList());
         break;
       case "reset":
-        ref.read(gameDayProvider.notifier).setParticipantsPresent(
-          ref.read(gameDayProvider).participantsClone.toList(),
+        ref.read(eventRoomProvider.notifier).setParticipantsPresent(
+          ref.read(eventRoomProvider).participantsClone.toList(),
         );
         break;
     }
@@ -129,7 +129,7 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
     final eventSession = ref.read(eventSessionProvider);
     final gameSession = ref.read(gameSessionProvider);
     final matchSession = ref.watch(gameMatchProvider);
-    final daySession = ref.watch(gameDayProvider);
+    final daySession = ref.watch(eventRoomProvider);
     final qtdPlayers = ref.watch(gameConfigProvider).config?.playersPerTeam ?? 0;
     //ESTADOS
     final event = gameSession.event!;
@@ -415,7 +415,7 @@ class _GameSetTeamsPageState extends ConsumerState<GameSetTeamsPage> {
                               child: ReorderableListView(
                                 physics: const NeverScrollableScrollPhysics(),
                                 onReorder: (oldIndex, newIndex) =>
-                                    ref.read(gameDayProvider.notifier).reorderParticipants(oldIndex, newIndex),
+                                    ref.read(eventRoomProvider.notifier).reorderParticipants(oldIndex, newIndex),
                                 proxyDecorator: (child, index, animation) {
                                   return AnimatedBuilder(
                                     animation: animation,

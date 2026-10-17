@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/theme/app_colors.dart';
-import 'package:esportly/core/providers/game/game_day_provider.dart';
+import 'package:esportly/core/providers/event/event_room_provider.dart';
 import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/presentation/widget/cards/card_player_team_widget.dart';
 
@@ -10,7 +10,7 @@ class BottomSheetGamePresentes extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final participants = ref.watch(gameDayProvider.select((s) => s.participantsPresent));
+    final participants = ref.watch(eventRoomProvider.select((s) => s.participantsPresent));
     final modality = ref.watch(eventSessionProvider.select((s) => s.event?.modality?.name ?? ''));
 
     return SizedBox(

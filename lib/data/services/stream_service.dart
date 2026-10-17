@@ -3,15 +3,20 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:esportly/core/enum/enums.dart';
 import 'package:esportly/data/models/snapshot_model.dart';
+import 'package:esportly/data/models/room_event_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:esportly/core/storage/app_storage.dart';
 import 'package:laravel_echo_null/laravel_echo_null.dart';
 import 'package:pusher_client_socket/pusher_client_socket.dart' as PUSHER;
 
-class GameStreamService {
-  //STREAM - MENSAGENS INTERNAS
-  final streamController = StreamController<SnapshotModel>.broadcast();
-  Stream<SnapshotModel> get messages => streamController.stream;
+class StreamService {
+  //STREAM - MENSAGENS DE PARTIDA (GameSnapshotEvent / GameActionEvent)
+  final _gameStreamController = StreamController<SnapshotModel>.broadcast();
+  Stream<SnapshotModel> get messages => _gameStreamController.stream;
+
+  //STREAM - MENSAGENS DE SALA (RoomEvent / PresenceEvent)
+  final _roomStreamController = StreamController<RoomEventModel>.broadcast();
+  Stream<RoomEventModel> get roomMessages => _roomStreamController.stream;
 
   //INSTANCIA DE STREAM/WEBSOCKET (.ENV)
   late Echo<PUSHER.PusherClient, PusherChannel> echo;
@@ -26,9 +31,10 @@ class GameStreamService {
 
   //FUNÇÃO DE INICIALIZAÇÃO DO SERVIÇO
   void init(){
-    //BUSCAR TOKEN
+    channel = null;
+    connectionState = ConnectionState.disconnected;
+    attempts = 0;
     final String token = AppStorage.read<String>('token') ?? '1235abcd';
-    //INSTANCIAR WEBSOCKET
     echo = Echo<PUSHER.PusherClient, PusherChannel>(PusherConnector(
       dotenv.env['REVERB_APP_KEY']!,
       authHeaders: () async => {
@@ -53,21 +59,20 @@ class GameStreamService {
 
   //FUNÇÃO DE CONEXÃO E INSCRIÇÃO NO CANAL DE STREAM
   Future<void> connect({required String uuid}) async {
-    final channelName = 'event.event-123';
+    final channelName = 'event.$uuid';
     if (channel == channelName && connectionState == ConnectionState.connected) return;
     connectionState = ConnectionState.connecting;
     try {
       echo.channel(channelName)
-        ..listen('GameSnapshotEvent', parsePayload)
-        ..listen('GameActionEvent', parsePayload)
-        ..listen('RoomEvent', parsePayload)
+        ..listen('.GameSnapshotEvent', _parseGamePayload)
+        ..listen('.GameActionEvent',   _parseGamePayload)
+        ..listen('.RoomEvent',         _parseRoomPayload)
+        ..listen('.PresenceEvent',     _parseRoomPayload)
         ..error(onChannelError);
       channel = channelName;
       connectionState = ConnectionState.connected;
-      debugPrint('[WS] Conectado ao canal: $channelName');
     } catch (e) {
       connectionState = ConnectionState.error;
-      debugPrint('[WS] Erro ao conectar: $e');
       reconnect(uuid: uuid);
     }
   }
@@ -83,10 +88,7 @@ class GameStreamService {
 
   //FUNÇÃO DE RECONEXÃO
   void reconnect({required String uuid}) {
-    if (attempts >= maxAttempts) {
-      debugPrint('[WS] Máximo de tentativas atingido');
-      return;
-    }
+    if (attempts >= maxAttempts) return;
     timer?.cancel();
     final delay = Duration(seconds: (5 * (1 << attempts)).clamp(5, 300));
     timer = Timer(delay, () {
@@ -97,24 +99,38 @@ class GameStreamService {
     });
   }
 
-  //FUNÇÃO DE PARSEAMENTO DE PAYLOAD DO STREAM
-  void parsePayload(dynamic payload) {
+  //FUNÇÃO DE PARSEAMENTO — EVENTOS DE PARTIDA
+  void _parseGamePayload(dynamic payload) {
     try {
       final map = payload is String
-        ? json.decode(payload) as Map<String, dynamic>
-        : Map<String, dynamic>.from(payload as Map);
+          ? json.decode(payload) as Map<String, dynamic>
+          : Map<String, dynamic>.from(payload as Map);
       final message = SnapshotModel.fromMap(map);
-      if (!streamController.isClosed) {
-        streamController.add(message);
+      if (!_gameStreamController.isClosed) {
+        _gameStreamController.add(message);
       }
     } catch (e) {
-      debugPrint('[WS] Erro ao parsear mensagem: $e');
+      debugPrint('[WS] Erro ao parsear evento de partida: $e');
+    }
+  }
+
+  //FUNÇÃO DE PARSEAMENTO — EVENTOS DE SALA
+  void _parseRoomPayload(dynamic payload) {
+    try {
+      final map = payload is String
+          ? json.decode(payload) as Map<String, dynamic>
+          : Map<String, dynamic>.from(payload as Map);
+      final message = RoomEventModel.fromMap(map);
+      if (!_roomStreamController.isClosed) {
+        _roomStreamController.add(message);
+      }
+    } catch (e, st) {
+      debugPrint('[WS] Erro ao parsear evento de sala: $e\n$st');
     }
   }
 
   //FUNÇÃO DE ERRO DE CONEXÃO
   void onChannelError(dynamic error) {
-    debugPrint('[WS] Erro no canal: $error');
     connectionState = ConnectionState.error;
   }
 
@@ -122,7 +138,8 @@ class GameStreamService {
   void dispose() {
     disposed = true;
     timer?.cancel();
-    streamController.close();
+    _gameStreamController.close();
+    _roomStreamController.close();
     echo.disconnect();
   }
 }

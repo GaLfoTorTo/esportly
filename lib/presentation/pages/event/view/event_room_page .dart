@@ -1,40 +1,43 @@
-import 'package:esportly/presentation/widget/cards/card_performance_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:esportly/core/di/service_locator.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/core/enum/enums.dart';
 import 'package:esportly/core/helpers/img_helper.dart';
 import 'package:esportly/core/helpers/modality_helper.dart';
+import 'package:esportly/core/helpers/game_action_helper.dart';
 import 'package:esportly/core/helpers/user_helper.dart';
 import 'package:esportly/core/theme/app_colors.dart';
 import 'package:esportly/data/models/event_model.dart';
 import 'package:esportly/data/models/game_event_model.dart';
-import 'package:esportly/data/models/game_model.dart';
 import 'package:esportly/data/models/team_model.dart';
 import 'package:esportly/data/models/user_model.dart';
 import 'package:esportly/core/providers/event/event_session_provider.dart';
-import 'package:esportly/core/providers/game/game_day_provider.dart';
+import 'package:esportly/core/providers/event/event_room_provider.dart';
 import 'package:esportly/core/providers/game/game_match_provider.dart';
 import 'package:esportly/core/providers/game/game_schedule_provider.dart';
 import 'package:esportly/presentation/widget/badges/position_widget.dart';
 import 'package:esportly/presentation/widget/bars/header_widget.dart';
+import 'package:esportly/presentation/widget/indicators/indicator_loading_widget.dart';
+import 'package:esportly/presentation/widget/buttons/button_outline_widget.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_game_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_game_list_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_mvp_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_player_game_widget.dart';
+import 'package:esportly/presentation/widget/cards/card_performance_widget.dart';
 import 'package:esportly/presentation/widget/images/img_circle_widget.dart';
 import 'package:esportly/presentation/widget/indicators/indicator_page_widget.dart';
 import 'package:esportly/presentation/widget/bottomSheet/bottomsheet_game_presentes.dart';
 
-class EventDayPage extends ConsumerStatefulWidget {
-  const EventDayPage({super.key});
+class EventRoomPage extends ConsumerStatefulWidget {
+  const EventRoomPage({super.key});
 
   @override
-  ConsumerState<EventDayPage> createState() => EventDayPageState();
+  ConsumerState<EventRoomPage> createState() => EventRoomPageState();
 }
 
-class EventDayPageState extends ConsumerState<EventDayPage> {
+class EventRoomPageState extends ConsumerState<EventRoomPage> {
   late final PageController _nextGamesController;
 
   @override
@@ -52,12 +55,16 @@ class EventDayPageState extends ConsumerState<EventDayPage> {
   @override
   Widget build(BuildContext context) {
     final dimensions = MediaQuery.of(context).size;
-    final event = ref.watch(eventSessionProvider.select((s) => s.event!));
-    final schedule = ref.watch(gameScheduleProvider);
-    final matchState = ref.watch(gameMatchProvider);
+    //PROVIDERS
+    final eventSession = ref.watch(eventSessionProvider);
+    final scheduleSession = ref.watch(gameScheduleProvider);
+    final matchSession = ref.watch(gameMatchProvider);
+    //ESTADOS
+    final event = eventSession.event!;
     final gameEvents = ref.watch(gameMatchProvider.select((s) => s.gameEvents));
-    final participantsPresent = ref.watch(gameDayProvider.select((s) => s.participantsPresent));
-    final isLive = schedule.inProgressGames.isNotEmpty;
+    final isLive = scheduleSession.inProgressGames.isNotEmpty;
+    final finishedGames = scheduleSession.finishedGames.isNotEmpty;
+    final participantsPresent = ref.watch(eventRoomProvider.select((s) => s.participantsPresent));
 
     final modalityColor = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality!.name)['color'] as Color;
     final modalityTextColor = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality!.name)['textColor'] as Color;
@@ -82,8 +89,6 @@ class EventDayPageState extends ConsumerState<EventDayPage> {
                 event: event,
                 modalityColor: modalityColor,
                 modalityTextColor: modalityTextColor,
-                participants: participantsPresent.length,
-                isLive: isLive,
               ),
               CardPerformanceWidget(
                 onStatusChanged: (status) {},
@@ -97,11 +102,11 @@ class EventDayPageState extends ConsumerState<EventDayPage> {
               ),
               CardGameWidget(
                 event: event,
-                game: isLive ? schedule.inProgressGames.first! : schedule.nextGames.first!,
+                game: isLive ? scheduleSession.inProgressGames.first! : scheduleSession.nextGames.first!,
                 live: isLive,
               ),             
               // FEED DE EVENTOS DA PARTIDA
-              if(isLive && gameEvents.isNotEmpty)...[
+              if(finishedGames && gameEvents.isNotEmpty)...[
                 _SectionHeader(
                   title: 'Eventos da Partida',
                   icon: Icons.bolt_rounded,
@@ -109,15 +114,16 @@ class EventDayPageState extends ConsumerState<EventDayPage> {
                 ),
                 _GameEventsFeed(
                   events: gameEvents.take(8).toList(),
-                  teamA: matchState.teamA,
-                  teamB: matchState.teamB,
+                  teamA: matchSession.teamA,
+                  teamB: matchSession.teamB,
                   color: modalityColor,
+                  category: event.gameConfig?.category,
                 ),
               ],             
               // PRÓXIMAS PARTIDAS
-              if (schedule.nextGames.isNotEmpty) ...[
+              if (scheduleSession.nextGames.isNotEmpty) ...[
                 _SectionHeader(
-                  title: 'Próximas Partidas',
+                  title: 'Previsão de Partidas',
                   icon: Icons.sports_rounded,
                   color: modalityColor,
                   actionLabel: 'Ver Mais',
@@ -128,7 +134,7 @@ class EventDayPageState extends ConsumerState<EventDayPage> {
                   height: 180,
                   child: PageView(
                     controller: _nextGamesController,
-                    children: schedule.nextGames.skip(1).take(3).map((g) {
+                    children: scheduleSession.nextGames.skip(1).take(3).map((g) {
                       return Padding(
                         padding: const EdgeInsets.only(right: 10, bottom: 10),
                         child: CardGameListWidget(
@@ -144,7 +150,7 @@ class EventDayPageState extends ConsumerState<EventDayPage> {
                 ),
                 IndicatorPageWidget(
                   pageController: _nextGamesController,
-                  options: schedule.nextGames.length.clamp(1, 3),
+                  options: scheduleSession.nextGames.length.clamp(1, 3),
                 ),
               ],
                             
@@ -181,15 +187,17 @@ class EventDayPageState extends ConsumerState<EventDayPage> {
               ],
                             
               // MVP DO DIA
-              const _SectionHeader(
-                title: 'MVP',
-                icon: Icons.emoji_events_rounded,
-                color: AppColors.yellow_500,
-              ),
-              CardMvpWidget(event: event),
+              if (finishedGames) ...[
+                const _SectionHeader(
+                  title: 'MVP',
+                  icon: Icons.emoji_events_rounded,
+                  color: AppColors.yellow_500,
+                ),
+                CardMvpWidget(event: event),
+              ],
                             
               // DESTAQUES
-              if (players.isNotEmpty) ...[
+              if (finishedGames && players.isNotEmpty) ...[
                 _SectionHeader(
                   title: 'Destaques',
                   icon: Icons.star_rounded,
@@ -220,27 +228,61 @@ class EventDayPageState extends ConsumerState<EventDayPage> {
 
 // ─── HERO SECTION ──────────────────────────────────────────────────────────
 
-class _HeroSection extends StatelessWidget {
+class _HeroSection extends ConsumerWidget {
   final EventModel event;
   final Color modalityColor;
   final Color modalityTextColor;
-  final int participants;
-  final bool isLive;
 
   const _HeroSection({
     required this.event,
     required this.modalityColor,
     required this.modalityTextColor,
-    required this.participants,
-    required this.isLive,
   });
 
   @override
-  Widget build(BuildContext context) {
-    Color color = participants > 0 ? AppColors.green_300 : AppColors.grey_300;
+  Widget build(BuildContext context, WidgetRef ref) {
+    //FUNÇÃO DE VERIFICAÇÃO DE ROLES DO USUARIO LOGADO
+    bool userRoles(EventModel event, UserModel user) {
+      if (event.id == null) return false;
+      UserModel? userInEvent;
+      for (final p in event.participants ?? <UserModel>[]) {
+        if (p.id == user.id) { userInEvent = p; break; }
+      }
+      if (userInEvent == null) return false;
+      try {
+        final participant = UserHelper.getParticipant(userInEvent.participants, event.id!);
+        return participant?.roles?.any((r) => r == 'Organizator' || r == 'Colaborator') ?? false;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    //ESTADOS
+    final roomSession = ref.watch(eventRoomProvider);
+    final user = sl<UserModel>(instanceName: 'user');
+    final event = ref.watch(eventSessionProvider.select((s) => s.event!));
+    final room = ref.watch(eventRoomProvider).room;
+    final canManage = userRoles(event, user);
+    Color color = roomSession.participantsPresent.isNotEmpty ? AppColors.green_300 : AppColors.grey_300;
+
+    //FUNÇÃO DE ENTRADA NA SALA DO EVENTO
+    Future<void> streamRoom() async {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: IndicatorLoadingWidget()),
+      );
+      if(room) {
+        await ref.read(eventRoomProvider.notifier).closeRoom();
+      } else {
+        await ref.read(eventRoomProvider.notifier).openRoom();
+      }
+      context.pop();
+    }
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 14,
@@ -250,8 +292,8 @@ class _HeroSection extends StatelessWidget {
             spacing: 10,
             children: [
               ImgCircularWidget(
-                size: 44, 
-                image: event.photo, 
+                size: 44,
+                image: event.photo,
                 element: 'event'
               ),
               Expanded(
@@ -274,6 +316,29 @@ class _HeroSection extends StatelessWidget {
                           '${event.address!.city}, ${event.address!.state}',
                           style: Theme.of(context).textTheme.labelSmall!
                         ),
+                        Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: room ? AppColors.red_300 : AppColors.grey_300.withAlpha(50),
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          child: Row(
+                            spacing: 5,
+                            children: [
+                              Icon(
+                                room ? Icons.sensors_rounded : Icons.sensors_off_rounded,
+                                size: 15,
+                                color: AppColors.white
+                              ),
+                              Text(
+                                "Ao Vivo",
+                                style: Theme.of(context).textTheme.displaySmall!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          )
+                        ),
                         //RESUMO DE PARTICIPANTES
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -286,17 +351,17 @@ class _HeroSection extends StatelessWidget {
                             spacing: 5,
                             children: [
                               Icon(
-                                Icons.circle, 
-                                size: 12, 
+                                Icons.circle,
+                                size: 12,
                                 color: color
                               ),
                               Icon(
-                                Icons.people, 
-                                size: 15, 
+                                Icons.people,
+                                size: 15,
                                 color: color
                               ),
                               Text(
-                                "$participants",
+                                "${roomSession.participantsPresent.length}",
                                 style: TextStyle(
                                   color: color,
                                   fontSize: 11,
@@ -313,6 +378,18 @@ class _HeroSection extends StatelessWidget {
               ),
             ],
           ),
+          if(canManage && !room)...[
+            //INDICADOR DE STATUS DA SALA
+            ButtonOutlineWidget(
+              text: "Sala Fechada",
+              icon: room ? Icons.sensors_rounded : Icons.sensors_off_rounded,
+              textColor: AppColors.white,
+              backgroundColor: room ? AppColors.red_300.withAlpha(20) : Theme.of(context).cardTheme.color!.withAlpha(50),
+              width: double.infinity,
+              height: 30,
+              action: streamRoom
+            ),
+          ]
         ],
       ),
     );
@@ -395,10 +472,10 @@ class _SectionHeader extends StatelessWidget {
         if (actionLabel != null && action != null)...[
           ButtonTextWidget(
             width: 100,
-            height: 30,
+            height: 20,
             text: actionLabel,
             textSize: 10,
-            icon: Icons.add,
+            icon: Icons.add_rounded,
             backgroundColor: color.withAlpha(20),
             textColor: color,
             action: () => action!()
@@ -483,64 +560,30 @@ class _GameEventsFeed extends StatelessWidget {
   final TeamModel teamA;
   final TeamModel teamB;
   final Color color;
+  final String? category;
 
   const _GameEventsFeed({
     required this.events,
     required this.teamA,
     required this.teamB,
     required this.color,
+    this.category,
   });
 
-  static ({IconData icon, Color color, String label}) _eventMeta(GameEvent? type) {
-    return switch (type) {
-      // ── TEMPO ──────────────────────────────────────────────────────────────
-      GameEvent.StartGame    => (icon: Icons.play_arrow_rounded,          color: AppColors.green_300,  label: 'Início'),
-      GameEvent.EndGame      => (icon: Icons.stop_rounded,                color: AppColors.red_300,    label: 'Fim'),
-      GameEvent.HalfTimeEnd  => (icon: Icons.pause_rounded,               color: AppColors.grey_500,   label: 'Intervalo'),
-      GameEvent.ExtraTime    => (icon: Icons.more_time_rounded,           color: AppColors.orange_300, label: 'Acréscimos'),
-      // ── FUTEBOL ────────────────────────────────────────────────────────────
-      GameEvent.Goal         => (icon: Icons.sports_soccer_rounded,       color: AppColors.green_400,  label: 'Gol'),
-      GameEvent.OwnGoal      => (icon: Icons.sports_soccer_rounded,       color: AppColors.red_300,    label: 'Gol Contra'),
-      GameEvent.Assist       => (icon: Icons.handshake_rounded,           color: AppColors.teal_400,   label: 'Assistência'),
-      GameEvent.ShotOnPost   => (icon: Icons.sports_soccer_outlined,      color: AppColors.green_400,  label: 'Trave'),
-      GameEvent.ShotSaved    => (icon: Icons.sports_soccer_outlined,      color: AppColors.green_500,  label: 'Chute Defend.'),
-      GameEvent.Penalty      => (icon: Icons.sports_rounded,              color: AppColors.purple_300, label: 'Pênalti'),
-      GameEvent.PenaltyMissed=> (icon: Icons.sports_rounded,              color: AppColors.red_400,    label: 'Pênalti Perdido'),
-      GameEvent.PenaltySave  => (icon: Icons.shield_rounded,              color: AppColors.yellow_600, label: 'Defesa Pênalti'),
-      GameEvent.GoalkeeperSave=>(icon: Icons.shield_rounded,              color: AppColors.yellow_500, label: 'Defesa Goleiro'),
-      GameEvent.Corner       => (icon: Icons.flag_rounded,                color: AppColors.blue_300,   label: 'Escanteio'),
-      GameEvent.FreeKick     => (icon: Icons.sports_soccer_outlined,      color: AppColors.blue_200,   label: 'Tiro Livre'),
-      GameEvent.Offside      => (icon: Icons.arrow_back_rounded,          color: AppColors.orange_300, label: 'Impedimento'),
-      GameEvent.Foul         => (icon: Icons.sports_handball_rounded,     color: AppColors.orange_400, label: 'Falta'),
-      GameEvent.YellowCard   => (icon: Icons.rectangle_rounded,           color: AppColors.yellow_500, label: 'Cartão Amarelo'),
-      GameEvent.RedCard      => (icon: Icons.rectangle_rounded,           color: AppColors.red_400,    label: 'Cartão Vermelho'),
-      GameEvent.Defense      => (icon: Icons.shield_rounded,              color: AppColors.yellow_300, label: 'Desarme'),
-      GameEvent.VARCheck     => (icon: Icons.videocam_rounded,            color: AppColors.indigo_300, label: 'VAR'),
-      // ── BASQUETE ───────────────────────────────────────────────────────────
-      GameEvent.Point2       => (icon: Icons.sports_basketball_rounded,   color: AppColors.green_300,  label: 'Cesta 2pts'),
-      GameEvent.Point3       => (icon: Icons.filter_3_rounded,            color: AppColors.green_500,  label: 'Cesta 3pts'),
-      GameEvent.BasketAssist => (icon: Icons.handshake_rounded,           color: AppColors.blue_300,   label: 'Assistência'),
-      GameEvent.Rebound      => (icon: Icons.vertical_align_top_rounded,  color: AppColors.teal_300,   label: 'Rebote'),
-      GameEvent.Steal        => (icon: Icons.back_hand_rounded,           color: AppColors.teal_500,   label: 'Roubo de Bola'),
-      GameEvent.BlockShot    => (icon: Icons.front_hand_rounded,          color: AppColors.teal_300,   label: 'Bloqueio'),
-      GameEvent.Turnover     => (icon: Icons.swap_horiz_rounded,          color: AppColors.orange_300, label: 'Turnover'),
-      GameEvent.PersonalFoul => (icon: Icons.warning_amber_rounded,       color: AppColors.yellow_500, label: 'Falta Pessoal'),
-      // ── VOLEIBOL ───────────────────────────────────────────────────────────
-      GameEvent.Ace          => (icon: Icons.bolt_rounded,                color: AppColors.green_500,  label: 'Ace'),
-      GameEvent.VolleyPoint  => (icon: Icons.sports_volleyball_rounded,   color: AppColors.green_300,  label: 'Ponto'),
-      GameEvent.Block        => (icon: Icons.front_hand_rounded,          color: AppColors.teal_300,   label: 'Bloqueio'),
-      GameEvent.DefensiveSave=> (icon: Icons.shield_rounded,              color: AppColors.blue_300,   label: 'Defesa'),
-      GameEvent.ServingError => (icon: Icons.sports_volleyball_outlined,  color: AppColors.red_300,    label: 'Erro de Saque'),
-      GameEvent.Fault        => (icon: Icons.close_rounded,               color: AppColors.orange_300, label: 'Falta'),
-      // ── COMPARTILHADOS ─────────────────────────────────────────────────────
-      GameEvent.Substitution => (icon: Icons.swap_horiz_rounded,          color: AppColors.cyan_400,   label: 'Substituição'),
-      GameEvent.Injury       => (icon: Icons.medical_services_rounded,    color: AppColors.red_200,    label: 'Lesão'),
-      _ => (icon: Icons.circle_rounded, color: AppColors.grey_500, label: type?.name ?? 'Evento'),
-    };
-  }
+  static const List<GameActionConfig> _sharedActions = [
+    GameActionConfig(label: 'Início',     icon: Icons.play_arrow_rounded,      color: AppColors.green_300,  event: GameEvent.StartGame,   requiresPlayer: false),
+    GameActionConfig(label: 'Fim',        icon: Icons.stop_rounded,            color: AppColors.red_300,    event: GameEvent.EndGame,     requiresPlayer: false),
+    GameActionConfig(label: 'Intervalo',  icon: Icons.pause_rounded,           color: AppColors.grey_500,   event: GameEvent.HalfTimeEnd, requiresPlayer: false),
+    GameActionConfig(label: 'Acréscimos', icon: Icons.more_time_rounded,       color: AppColors.orange_300, event: GameEvent.ExtraTime,   requiresPlayer: false),
+    GameActionConfig(label: 'Lesão',      icon: Icons.medical_services_rounded, color: AppColors.red_200,   event: GameEvent.Injury),
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final lookup = <GameEvent, GameActionConfig>{
+      for (final a in [...GameActionHelper.getActions(category), ..._sharedActions]) a.event: a,
+    };
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
@@ -550,7 +593,10 @@ class _GameEventsFeed extends StatelessWidget {
         children: events.asMap().entries.map((entry) {
           final i = entry.key;
           final event = entry.value;
-          final meta = _eventMeta(event.type);
+          final meta = event.type != null ? lookup[event.type] : null;
+          final metaIcon  = meta?.icon  ?? Icons.circle_rounded;
+          final metaColor = meta?.color ?? AppColors.grey_500;
+          final metaLabel = meta?.label ?? (event.type?.name ?? 'Evento');
           final isTeamA = event.teamId == teamA.id;
           final teamName = isTeamA ? (teamA.name ?? 'Time A') : (teamB.name ?? 'Time B');
 
@@ -570,10 +616,10 @@ class _GameEventsFeed extends StatelessWidget {
                           width: 34,
                           height: 34,
                           decoration: BoxDecoration(
-                            color: meta.color.withAlpha(25),
+                            color: metaColor.withAlpha(25),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(meta.icon, size: 18, color: meta.color),
+                          child: Icon(metaIcon, size: 18, color: metaColor),
                         ),
                         Column(
                           crossAxisAlignment: isTeamA
@@ -582,7 +628,7 @@ class _GameEventsFeed extends StatelessWidget {
                           spacing: 1,
                           children: [
                             Text(
-                              meta.label,
+                              metaLabel,
                               style: Theme.of(context).textTheme.labelMedium!.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),

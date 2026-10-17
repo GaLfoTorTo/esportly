@@ -1,43 +1,68 @@
-import 'package:esportly/core/helpers/modality_helper.dart';
-import 'package:esportly/core/providers/game/game_day_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:esportly/core/providers/event/event_session_provider.dart';
+import 'package:esportly/core/di/service_locator.dart';
+import 'package:esportly/core/helpers/modality_helper.dart';
+import 'package:esportly/core/helpers/user_helper.dart';
 import 'package:esportly/core/theme/app_colors.dart';
 import 'package:esportly/core/theme/app_icones.dart';
 import 'package:esportly/core/theme/app_images.dart';
 import 'package:esportly/data/models/event_model.dart';
+import 'package:esportly/data/models/user_model.dart';
+import 'package:esportly/core/providers/event/event_room_provider.dart';
+import 'package:esportly/core/providers/event/event_session_provider.dart';
 import 'package:esportly/core/providers/game/game_schedule_provider.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
 import 'package:esportly/presentation/widget/images/img_group_circle_widget.dart';
 import 'package:esportly/presentation/widget/indicators/indicator_loading_widget.dart';
 
-class CardDayEventWidget extends ConsumerStatefulWidget {
+class CardEventRoomWidget extends ConsumerStatefulWidget {
   final EventModel event;
 
-  const CardDayEventWidget({
+  const CardEventRoomWidget({
     super.key,
     required this.event,
   });
 
   @override
-  ConsumerState<CardDayEventWidget> createState() => _CardDayEventWidgetState();
+  ConsumerState<CardEventRoomWidget> createState() => _CardEventRoomWidgetState();
 }
 
-class _CardDayEventWidgetState extends ConsumerState<CardDayEventWidget> {
-  Future<void> _enterEvent() async {
+class _CardEventRoomWidgetState extends ConsumerState<CardEventRoomWidget> {
+
+  //FUNÇÃO DE VERIFICAÇÃO DE ROLES DO USUARIO LOGADO
+  bool userRoles(EventModel event, UserModel user) {
+    if (event.id == null) return false;
+    UserModel? userInEvent;
+    for (final p in event.participants ?? <UserModel>[]) {
+      if (p.id == user.id) { userInEvent = p; break; }
+    }
+    if (userInEvent == null) return false;
+    try {
+      final participant = UserHelper.getParticipant(userInEvent.participants, event.id!);
+      return participant?.roles?.any((r) => r == 'Organizator' || r == 'Colaborator') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  //FUNÇÃO DE ENTRADA NA SALA DO EVENTO
+  Future<void> join() async {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: IndicatorLoadingWidget()),
     );
-    await ref.read(eventSessionProvider.notifier).setEvent(widget.event);
+    final event = ref.read(eventSessionProvider).event;
+    if (event == null || event.uuid != widget.event.uuid) {
+      await ref.read(eventSessionProvider.notifier).setEvent(widget.event);
+    }
     while (ref.read(gameScheduleProvider).loading) {
       await Future.delayed(const Duration(milliseconds: 50));
     }
-    ref.read(gameDayProvider.notifier).init();
+    final roomSession = ref.read(eventRoomProvider);
+    if (roomSession.room) await ref.read(eventRoomProvider.notifier).enterRoom();
     if (mounted) {
       Navigator.of(context, rootNavigator: true).pop();
       context.push('/event/day');
@@ -49,8 +74,12 @@ class _CardDayEventWidgetState extends ConsumerState<CardDayEventWidget> {
     //RESGATAR DIMENSOES DO DISPOSITIVO
     var dimensions = MediaQuery.of(context).size;
     //VERIFICAR SE HÁ PARTIDAS EM ANDAMENTO PARA ESTE EVENTO
-    final inProgressGames = ref.watch(gameScheduleProvider.select((s) => s.inProgressGames));
+    final roomSession = ref.watch(eventRoomProvider);
+    final room = roomSession.room;
+    final user = sl<UserModel>(instanceName: 'user');
     final event = widget.event;
+    final canManage = userRoles(event, user);
+    final roomAccessible = canManage || room;
     //ESTADO - ITEMS EVENTO
     Color modalityColor = ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality?.name ?? 'Football')['color'];
     Color modalityTextColor = AppColors.white;//ModalityHelper.getEventModalityColor(event.gameConfig?.category ?? event.modality?.name ?? 'Football')['textColor'];
@@ -61,8 +90,6 @@ class _CardDayEventWidgetState extends ConsumerState<CardDayEventWidget> {
     final month = DateFormat('MMM').format(now).toUpperCase().toString();
     //RESGATAR IMAGENS DOS USUARIOS
     List<String> userImages = event.participants!.take(3).map((user) => user.photo ?? AppImages.userDefault).toList();
-    //VERIFICAR SE TEM PARTIDA EM ANDAMENTO
-    bool hasGame = inProgressGames.any((gameEvent) => gameEvent?.id == event.id);
             
     return Card(
       child: Container(
@@ -86,22 +113,17 @@ class _CardDayEventWidgetState extends ConsumerState<CardDayEventWidget> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  children: [
-                    SizedBox(
-                      width: dimensions.width * 0.6,
-                      child: Text(
-                        "${event.title}",
-                        style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                          color: modalityTextColor,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
+                Flexible(
+                  child: Text(
+                    "${event.title}",
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                      color: modalityTextColor,
                     ),
-                  ],
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
                 ),
-                if(hasGame)...[
+                if(room)...[
                   Container(
                     width: 30,
                     padding: const EdgeInsets.all(5),
@@ -231,15 +253,27 @@ class _CardDayEventWidgetState extends ConsumerState<CardDayEventWidget> {
                     size: 20,
                   ),
                 ),
-                ButtonTextWidget(
-                  action: _enterEvent,
-                  width: 80,
-                  height: 30,
-                  text: "Entrar",
-                  backgroundColor: modalityColor.withAlpha(200),
-                  textColor: modalityTextColor,
-                  borderRadius: 50,
-                )
+                roomAccessible
+                    ? ButtonTextWidget(
+                        action: join,
+                        width: 80,
+                        height: 30,
+                        text: "Entrar",
+                        backgroundColor: modalityColor.withAlpha(200),
+                        textColor: modalityTextColor,
+                        borderRadius: 50,
+                      )
+                    : ButtonTextWidget(
+                        action: () {},
+                        disabled: true,
+                        width: 110,
+                        height: 30,
+                        text: "Sala Fechada",
+                        icon: Icons.lock_rounded,
+                        backgroundColor: AppColors.grey_300.withAlpha(60),
+                        textColor: AppColors.grey_300,
+                        borderRadius: 50,
+                      ),
               ],
             ),
           ],

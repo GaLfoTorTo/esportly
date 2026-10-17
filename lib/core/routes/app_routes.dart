@@ -23,7 +23,7 @@ import 'package:esportly/presentation/pages/escalation/historic_page.dart';
 import 'package:esportly/presentation/pages/escalation/market_page.dart';
 import 'package:esportly/presentation/pages/escalation/statistics_page.dart';
 import 'package:esportly/presentation/pages/games/detail/game_detail_page.dart';
-import 'package:esportly/presentation/pages/event/view/event_day_page%20.dart';
+import 'package:esportly/presentation/pages/event/view/event_room_page%20.dart';
 import 'package:esportly/presentation/pages/games/config/game_config_page.dart';
 import 'package:esportly/presentation/pages/games/config/game_set_teams_page.dart';
 import 'package:esportly/presentation/pages/event/event_landing_page.dart';
@@ -128,7 +128,7 @@ class AppRoutes {
               routes: [
                 GoRoute(
                   path: '/day',
-                  pageBuilder: (_, __) => const NoTransitionPage(child: EventDayPage()),
+                  pageBuilder: (_, __) => const NoTransitionPage(child: EventRoomPage()),
                 ),
                 GoRoute(
                   path: 'view',

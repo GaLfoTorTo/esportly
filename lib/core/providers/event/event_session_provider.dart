@@ -150,7 +150,6 @@ class EventSessionNotifier extends Notifier<EventSessionState> {
         ref.read(gameSessionProvider.notifier).init(event);
       }
     } catch (e) {
-      print(e);
       state = state.copyWith(error: true);
       final ctx = sl<GoRouter>().routerDelegate.navigatorKey.currentContext;
       if (ctx != null) AppHelper.feedbackMessage(ctx, AppHelper.extractErrorMessage(e));

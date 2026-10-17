@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:esportly/core/theme/app_colors.dart';
 import 'package:esportly/presentation/widget/buttons/button_text_widget.dart';
-import 'package:esportly/presentation/widget/cards/card_day_event_widget.dart';
+import 'package:esportly/presentation/widget/cards/card_event_room_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_event_today_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_player_game_widget.dart';
 import 'package:esportly/presentation/widget/cards/card_task_widget.dart';
@@ -97,7 +97,7 @@ class _SectionHomeWidgetState extends State<SectionHomeWidget> {
   Widget setCardSection(value){
     switch (widget.title) {
       case "Minhas Peladas":
-        return CardDayEventWidget(event: value);  
+        return CardEventRoomWidget(event: value);  
       case "Tarefas":
         return CardTaskWidget(task: value);  
       case "Perto de Você":
@@ -162,12 +162,13 @@ class _SectionHomeWidgetState extends State<SectionHomeWidget> {
               ),
               if(widget.title != 'Minhas Peladas' )...[
                 ButtonTextWidget(
-                  text: "Ver Mais",
-                  icon: Icons.add_rounded,
                   width: 100,
                   height: 20,
+                  text: "Ver Mais",
+                  textSize: 10,
+                  icon: Icons.add_rounded,
                   textColor: AppColors.green_300,
-                  backgroundColor: Colors.transparent,
+                  backgroundColor: AppColors.green_300.withAlpha(20),
                   action: () {},
                 ) 
               ]

@@ -1,9 +1,9 @@
 import 'package:esportly/core/di/service_locator.dart';
 import 'package:esportly/core/helpers/app_helper.dart';
+import 'package:esportly/core/providers/event/event_room_provider.dart';
 import 'package:esportly/core/providers/game/game_config_provider.dart';
-import 'package:esportly/core/providers/game/game_day_provider.dart';
 import 'package:esportly/core/providers/game/game_control_provider.dart';
-import 'package:esportly/core/providers/game/game_stream_provider.dart';
+import 'package:esportly/core/providers/game/game_room_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:esportly/data/models/event_model.dart';
 import 'package:esportly/data/models/game_model.dart';
@@ -55,7 +55,9 @@ class GameSessionNotifier extends Notifier<GameSessionState> {
       state = state.copyWith(event: event);
       ref.read(gameConfigProvider.notifier).init(event.gameConfig);
       ref.read(gameScheduleProvider.notifier).init(event);
-      ref.read(gameStreamProvider.notifier).init(event);
+      // gameRoomProvider inicializa o Echo/WebSocket; eventRoomProvider assina DEPOIS
+      ref.read(gameRoomProvider.notifier).init(event);
+      ref.read(eventRoomProvider.notifier).init(event);
     } catch (e) {
       state = state.copyWith(error: true);
       final ctx = sl<GoRouter>().routerDelegate.navigatorKey.currentContext;
@@ -66,13 +68,13 @@ class GameSessionNotifier extends Notifier<GameSessionState> {
 
   //FUNÇÃO DE RESET COMPLETO
   void dispose() {
-    ref.invalidate(gameDayProvider);
     ref.invalidate(gameMatchProvider);
     ref.invalidate(gameScheduleProvider);
     ref.invalidate(gameVotesProvider);
     ref.invalidate(gameControlProvider);
-    ref.invalidate(gameStreamProvider);
+    ref.invalidate(gameRoomProvider);
     ref.invalidate(gameConfigProvider);
+    ref.invalidate(eventRoomProvider);
     state = const GameSessionState();
   }
 

@@ -105,4 +105,16 @@ class EventRepository {
       return null;
     }
   }
+
+  //ABRIR SALA DO EVENTO
+  Future<void> openRoom(String uuid) => remoteService.openRoom(uuid);
+
+  //FECHAR SALA DO EVENTO
+  Future<void> closeRoom(String uuid) => remoteService.closeRoom(uuid);
+
+  //ENTRAR NA SALA DO EVENTO
+  Future<void> enterRoom(String uuid) => remoteService.enterRoom(uuid);
+
+  //SAIR DA SALA DO EVENTO
+  Future<void> leaveRoom(String uuid) => remoteService.leaveRoom(uuid);
 }

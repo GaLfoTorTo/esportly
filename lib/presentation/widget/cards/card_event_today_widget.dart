@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:esportly/core/helpers/img_helper.dart';
 import 'package:esportly/core/theme/app_colors.dart';
 import 'package:esportly/data/models/event_model.dart';
+import 'package:intl/intl.dart';
 
 class CardEventTodayWidget extends StatelessWidget {
   final EventModel event;
@@ -13,6 +14,10 @@ class CardEventTodayWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var dimensions = MediaQuery.of(context).size;
+    DateTime startTime = DateFormat.Hm().parse(event.startTime!);
+    DateTime endTime = DateFormat.Hm().parse(event.endTime!);
+    var eventStartTime = DateFormat.Hm().format(startTime);
+    var eventEndTime = DateFormat.Hm().format(endTime);
     
     return  Card(
       child: Container(
@@ -53,7 +58,7 @@ class CardEventTodayWidget extends StatelessWidget {
                           color: AppColors.grey_300,
                         ),
                         Text(
-                          "${event.startTime} - ${event.endTime}",
+                          "${eventStartTime} - ${eventEndTime}",
                           style: Theme.of(context).textTheme.labelSmall!.copyWith(
                             color: AppColors.grey_500
                           )

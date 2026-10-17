@@ -71,4 +71,26 @@ class EventService {
       .map<GameModel>((e) => GameModel.fromMap(e))
       .toList();
   }
+
+  // ─── FUNÇÕES DE TRIGGERS DE STREAM ───────────────────────────────────────────────────────────
+
+  //FUNÇÃO DE ABERTURA DA SALA DO EVENTO
+  Future<void> openRoom(String uuid) async {
+    await apiClient.post("${ApiRoutes.events}/$uuid/room/open", {});
+  }
+
+  //FUNÇÃO DE FECHAMENTO DA SALA DO EVENTO
+  Future<void> closeRoom(String uuid) async {
+    await apiClient.post("${ApiRoutes.events}/$uuid/room/close", {});
+  }
+
+  //FUNÇÃO DE ENTRADA DO USUARIO NA SALA
+  Future<void> enterRoom(String uuid) async {
+    await apiClient.post("${ApiRoutes.events}/$uuid/room/join", {});
+  }
+
+  //FUNÇÃO DE SAIDA DO USUARIO DA SALA
+  Future<void> leaveRoom(String uuid) async {
+    await apiClient.post("${ApiRoutes.events}/$uuid/room/exit", {});
+  }
 }

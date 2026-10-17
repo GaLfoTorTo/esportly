@@ -18,6 +18,8 @@ enum AchievementType { Single, Progressive }
 enum SnapshotType { snapshot, action, unknown }
 //STATUS DE CONEXÃO DO WEBSOCKET
 enum ConnectionState { disconnected, connecting, connected, error }
+//TIPOS DE EVENTO DA SALA DE STREAM
+enum RoomEventType { open, close, join, exit }
 //TIPO DE EVENTO NA PARTIDA
 enum GameEvent {
   //TIME
